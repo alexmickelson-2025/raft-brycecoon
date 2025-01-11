@@ -100,3 +100,4 @@ c:\Users\bryce\source\repos\DistributedTDDProject1\DistributedTDDTests\obj\Debug
 c:\Users\bryce\source\repos\DistributedTDDProject1\DistributedTDDTests\obj\Debug\net8.0\DistributedTDDTests.pdb
 c:\Users\bryce\source\repos\DistributedTDDProject1\DistributedTDDTests\obj\Debug\net8.0\DistributedTDDTests.genruntimeconfig.cache
 c:\Users\bryce\source\repos\DistributedTDDProject1\DistributedTDDTests\obj\Debug\net8.0\ref\DistributedTDDTests.dll
+C:\Users\bryce\source\repos\DistributedTDDProject1\DistributedTDDTests\obj\Debug\net8.0\DistributedTDDTests.sourcelink.json

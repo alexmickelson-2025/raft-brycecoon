@@ -9,3 +9,4 @@ c:\Users\bryce\source\repos\DistributedTDDProject1\DistributedTDDProject1\obj\De
 c:\Users\bryce\source\repos\DistributedTDDProject1\DistributedTDDProject1\obj\Debug\net8.0\refint\DistributedTDDProject1.dll
 c:\Users\bryce\source\repos\DistributedTDDProject1\DistributedTDDProject1\obj\Debug\net8.0\DistributedTDDProject1.pdb
 c:\Users\bryce\source\repos\DistributedTDDProject1\DistributedTDDProject1\obj\Debug\net8.0\ref\DistributedTDDProject1.dll
+C:\Users\bryce\source\repos\DistributedTDDProject1\DistributedTDDProject1\obj\Debug\net8.0\DistributedTDDProject1.sourcelink.json
