@@ -1,0 +1,11 @@
+DONE SO FAR
+3 X
+5 X
+8 X
+11 X
+12 X
+13 X
+14 X
+15 X
+17 X
+18 X
