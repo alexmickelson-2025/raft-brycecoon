@@ -22,5 +22,6 @@
   </ImportGroup>
   <PropertyGroup Condition=" '$(ExcludeRestorePackageImports)' != 'true' ">
     <Pkgxunit_analyzers Condition=" '$(Pkgxunit_analyzers)' == '' ">C:\Users\bryce\.nuget\packages\xunit.analyzers\1.4.0</Pkgxunit_analyzers>
+    <PkgFluentAssertions Condition=" '$(PkgFluentAssertions)' == '' ">C:\Users\bryce\.nuget\packages\fluentassertions\8.0.0</PkgFluentAssertions>
   </PropertyGroup>
 </Project>
