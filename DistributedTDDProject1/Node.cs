@@ -65,7 +65,7 @@ public class Node
         {
             n.state = nodeState.FOLLOWER;
         }
-        if (n.term < term)
+        if (n.term <= term)
         { 
         return "recieved";
         }
