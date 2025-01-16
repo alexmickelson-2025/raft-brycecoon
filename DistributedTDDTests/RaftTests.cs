@@ -13,6 +13,7 @@ public class RaftTests
         Node n = new();
         Node n2 = new();
         Node n3 = new();
+        
         n.neighbors = [n2, n3];
 
         n.startElection();
@@ -58,7 +59,7 @@ public class RaftTests
 
     //Test 5
     [Fact]
-    public void When_Election_Time_Is_Reset_It_Is_Random_Value_Between_150_And_300()
+    public void When_Election_Time_Is_Reset_It_Is_A_Random_Value_Between_150_And_300()
     {
         Node n = new();
         List<long> timeoutIntervals = new List<long>();
@@ -202,7 +203,7 @@ public class RaftTests
         Assert.Equal(nodeState.FOLLOWER, n2.state);
     }
 
-    //Test 12: b, inverse of a
+    //Test 12: b
     [Fact]
     public void Candidate_Does_Not_Lose_To_Leader_With_Earlier_Term()
     {
