@@ -1,4 +1,6 @@
-﻿namespace DistributedTDDProject1;
+﻿using System.Timers;
+
+namespace DistributedTDDProject1;
 
 public enum nodeState { 
     FOLLOWER,
@@ -13,9 +15,10 @@ public class Node
     public int voteTerm;
     public int term;
     public nodeState state; //starts as the first option (follower)
-    public double numNodes;
-    public Timer timer;
+    public Node[] neighbors;
+    public System.Timers.Timer timer;
     public long timeoutInterval;
+    public Guid currentLeader;
 
     public Node()
     {
@@ -23,23 +26,25 @@ public class Node
         term = 0;
         voteTerm = 0;
         timeoutInterval = Random.Shared.NextInt64(150,301);
-        timer = new Timer(timerCallback, null, 0, timeoutInterval);
+        neighbors = [];
+        timer = new System.Timers.Timer(timeoutInterval);
+        timer.Elapsed += Timer_Timeout;
+        timer.AutoReset = false;
+        timer.Start();
     }
 
-    public void countVotes()
-    {
-        if (voteId == id) { state = nodeState.LEADER; }
-    }
-
-    public bool countVotes(Node[] nodes)
+    public void setElectionResults()
     {
         double voteCount = 0;
         if (voteId == id) { voteCount++; }
-        foreach (Node node in nodes)
+        foreach (Node node in neighbors)
         {
             if (node.voteId == id) { voteCount++; }
         }
-        return (voteCount >= Math.Ceiling(numNodes/2));
+        if (voteCount >= Math.Ceiling(((double)neighbors.Length+1) / 2))
+        {
+            state = nodeState.LEADER;
+        }
     }
 
     public void requestVote(Node[] nodes)
@@ -54,20 +59,17 @@ public class Node
         }
     }
 
-    public void resetTimeoutInterval()
+    public string sendAppendRPC(Node recievingNode)
     {
-        timeoutInterval = Random.Shared.NextInt64(150, 301);
-    }
-
-    public string sendAppendRPC(Node n)
-    {
-        if (n.state == nodeState.CANDIDATE && (term >= n.term))
+        if (recievingNode.state == nodeState.CANDIDATE && (term >= recievingNode.term))
         {
-            n.state = nodeState.FOLLOWER;
+            recievingNode.state = nodeState.FOLLOWER;
         }
-        if (n.term <= term)
-        { 
+        if (recievingNode.term <= term)
+        {
+            recievingNode.currentLeader = id;
         return "recieved";
+
         }
         else { return "rejected"; }
     }
@@ -79,8 +81,18 @@ public class Node
         state = nodeState.CANDIDATE;
     }
 
-    public void timerCallback(object state)
+    public void Timer_Timeout(object sender, ElapsedEventArgs e)
     {
+        ResetTimer();
         startElection();
+    }
+
+    public void ResetTimer()
+    {
+        timeoutInterval = Random.Shared.NextInt64(150, 301);
+        timer = new System.Timers.Timer(timeoutInterval);
+        timer.Elapsed += Timer_Timeout;
+        timer.AutoReset = false;
+        timer.Start();
     }
 }

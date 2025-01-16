@@ -13,4 +13,5 @@ public interface INode
     int term { get; set; }
     nodeState state { get; set; } //starts as the first option (follower)
     double numNodes { get; set; }
+    public System.Timers.Timer timer { get; set; }
 }
