@@ -8,21 +8,20 @@ public enum nodeState {
     LEADER
 }
 
-public class Node
+public class Node : INode
 {
-    public Guid id;
-    public Guid voteId;
-    public int voteTerm;
-    public int term;
-    public nodeState state; //starts as the first option (follower)
-    public Node[] neighbors;
-    public System.Timers.Timer electionTimeoutTimer;
-    public System.Timers.Timer heartbeatTimer;
-    public long timeoutInterval;
-    public Guid currentLeader;
-    public int numVotesRecieved;
-
-    public int heartbeatsSent = 0; //for testing
+    public Guid id { get; set; }
+    public Guid voteId {get;set;}
+    public int voteTerm {get;set;}
+    public int term {get;set;}
+    public nodeState state {get;set;} //starts as the first option (follower)
+    public INode[] neighbors {get;set;}
+    System.Timers.Timer electionTimeoutTimer {get;set;}
+    System.Timers.Timer heartbeatTimer {get;set;}
+    public long timeoutInterval {get;set;}
+    public Guid currentLeader {get;set;}
+    public int numVotesRecieved {get;set;}
+    int heartbeatsSent = 0; //for testing
 
     public Node()
     {
@@ -39,8 +38,6 @@ public class Node
 
     public void setElectionResults()
     {
-        double voteCount = 0;
-        if (voteId == id) { voteCount++; }
         if (numVotesRecieved >= Math.Ceiling(((double)neighbors.Length+1) / 2))
         {
             state = nodeState.LEADER;
@@ -70,25 +67,25 @@ public class Node
         heartbeatsSent++;
     }
 
-    public void requestVote(Node[] nodes)
+    public void requestVote(INode[] nodes)
     {
-        foreach (Node node in nodes)
+        foreach (var node in nodes)
         {
-            if (node.voteTerm < term)
-            {
-                node.voteId = id;
-                node.voteTerm = term;
-                sendYesVote();
-            }
+            sendVoteRequest(node);
         }
     }
 
-    private void sendYesVote()
+    public void sendVoteRequest(INode recievingNode)
     {
-        numVotesRecieved++;
+        if (recievingNode.voteTerm < term)
+        {
+            recievingNode.voteId = id;
+            recievingNode.voteTerm = term;
+            numVotesRecieved++;
+        }
     }
 
-    public string sendAppendRPC(Node recievingNode)
+    public string sendAppendRPC(INode recievingNode)
     {
         if (recievingNode.state == nodeState.CANDIDATE && (term >= recievingNode.term))
         {
@@ -106,7 +103,7 @@ public class Node
     public void startElection()
     {
         voteId = id;
-        sendYesVote();
+        numVotesRecieved++;
         term++;
         state = nodeState.CANDIDATE;
     }
