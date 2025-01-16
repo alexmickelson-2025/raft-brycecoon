@@ -6,6 +6,25 @@ namespace DistributedTDDTests;
 
 public class RaftTests
 {
+    //Test 1
+    [Fact]
+    public void Leader_Sends_Hearbeat_Within_50ms()
+    {
+        Node n = new();
+        Node n2 = new();
+        Node n3 = new();
+        n.neighbors = [n2, n3];
+
+        n.startElection();
+        n.requestVote(n.neighbors);
+        n.setElectionResults();
+        Assert.Equal(nodeState.LEADER, n.state);
+
+        Thread.Sleep(750);
+        Assert.Equal(nodeState.FOLLOWER, n2.state);
+        Assert.Equal(nodeState.FOLLOWER, n3.state);
+    }
+
     //Test 2
     [Fact]
     public void Recieving_Append_Entried_From_Another_Node_The_Node_Remembers_The_Leader()
@@ -23,6 +42,19 @@ public class RaftTests
         Node n = new();
         Assert.Equal(nodeState.FOLLOWER, n.state);
     }
+
+
+    //test 4
+    [Fact]
+    public void Follower_Doesnt_Get_A_Message_For_300_ms_Starts_An_Election()
+    {
+        Node n = new();
+        Assert.Equal(nodeState.FOLLOWER,n.state);
+        Thread.Sleep(301);
+        n.term.Should().BeGreaterThan(0);
+        Assert.NotEqual(nodeState.FOLLOWER, n.state);
+    }
+
 
     //Test 5
     [Fact]
@@ -44,9 +76,25 @@ public class RaftTests
     {
         Node n = new();
         int beforeTerm = n.term;
-        Thread.Sleep(300);
+        Thread.Sleep(400);
         n.term.Should().BeGreaterThan(beforeTerm);
     }
+
+    //test 7
+    [Fact]
+    public void Follower_Gets_A_Message_Within_300_ms_Does_Not_Start_An_Election()
+    {
+        Node n = new();
+        Node n2 = new();
+        Assert.Equal(nodeState.FOLLOWER, n.state);
+        for (int i = 0; i < 5; i++)
+        {
+            Thread.Sleep(50);
+            n2.sendAppendRPC(n);
+        }
+        Assert.Equal(nodeState.FOLLOWER, n.state);
+    }
+
 
     //Test 8: part a
     [Fact]
@@ -87,6 +135,44 @@ public class RaftTests
         Assert.NotEqual(n3.voteId, n.id);
         n.setElectionResults();
         Assert.Equal(nodeState.CANDIDATE, n.state);
+    }
+
+    //Test 9
+    [Fact]
+    public void Candidate_Recieves_Majority_Vote_Without_Every_Response_Becomes_Leader()
+    {
+        Node n = new();
+        Node n2 = new();
+        Node n3 = new();
+        n.neighbors = [n2, n3];
+        Node[] responsiveNodes = [n2];
+
+        n.startElection();
+        n.requestVote(responsiveNodes);
+        n.setElectionResults();
+        Assert.Equal(nodeState.LEADER, n.state);
+    }
+
+    //Test 10
+    [Fact]
+    public void Follower_Without_Vote_Sends_AppendRPC_With_Yes()
+    {
+        Node n = new();
+        Node n2 = new();
+        Node n3 = new();
+        n.neighbors = [n2, n3];
+
+        n.startElection();
+        n.requestVote(n.neighbors);
+        Assert.Equal(0, n2.term);
+        Assert.Equal(0, n3.term);
+        Assert.Equal(1, n.term);
+        Assert.Equal(n.id, n2.voteId);
+        Assert.Equal(n.id, n3.voteId);
+        Assert.Equal(n.term, n2.voteTerm);
+        Assert.Equal(n.term, n3.voteTerm);
+
+        Assert.Equal(3, n.numVotesRecieved);
     }
 
     //Test 11
@@ -183,6 +269,17 @@ public class RaftTests
         Assert.Equal(n2.id, n3.voteId);
     }
 
+    //test 16
+    [Fact]
+    public void If_Election_Timer_Expires_New_Election_Is_Started()
+    {
+        Node n = new();
+        int beforeTerm = n.term;
+        Thread.Sleep(400);
+        n.term.Should().BeGreaterThan(beforeTerm);
+
+    }
+
     //Test 17
     [Fact]
     public void Append_Entries_Request_Sends_Response()
@@ -206,5 +303,23 @@ public class RaftTests
         Assert.Equal("rejected", RPCResponse);
     }
 
-    //Test 1
+    //Test 19
+    [Fact]
+    public void Candidate_Wins_An_Election_Sends_A_Heartbeat()
+    {
+        Node n = new();
+        Node n2 = new();
+        Node n3 = new();
+        n.neighbors = [n2, n3];
+
+        n.startElection();
+        n.requestVote(n.neighbors);
+        Thread.Sleep(149);
+        n.setElectionResults();
+        Assert.Equal(nodeState.LEADER, n.state);
+
+        Thread.Sleep(149);
+        Assert.Equal(nodeState.FOLLOWER, n2.state);
+        Assert.Equal(nodeState.FOLLOWER, n3.state);
+    }
 }
