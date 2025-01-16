@@ -123,6 +123,10 @@
               "target": "Package",
               "version": "[8.0.0, )"
             },
+            "Meziantou.Xunit.ParallelTestFramework": {
+              "target": "Package",
+              "version": "[2.3.0, )"
+            },
             "Microsoft.NET.Test.Sdk": {
               "target": "Package",
               "version": "[17.8.0, )"

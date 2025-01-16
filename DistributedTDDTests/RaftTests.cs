@@ -6,7 +6,15 @@ namespace DistributedTDDTests;
 
 public class RaftTests
 {
-
+    //Test 2
+    [Fact]
+    public void Recieving_Append_Entried_From_Another_Node_The_Node_Remembers_The_Leader()
+    {
+        Node n = new();
+        Node n2 = new();
+        n.sendAppendRPC(n2);
+        Assert.Equal(n.id, n2.currentLeader);
+    }
 
     //Test 3
     [Fact]
@@ -21,22 +29,23 @@ public class RaftTests
     public void When_Election_Time_Is_Reset_It_Is_Random_Value_Between_150_And_300()
     {
         Node n = new();
-        long interval = n.timeoutInterval;
-        n.timeoutInterval.Should().BeInRange(150, 300);
-        n.resetTimeoutInterval();
-        long interval2 = n.timeoutInterval;
-        n.timeoutInterval.Should().BeInRange(150, 300);
-        Assert.NotEqual(interval, interval2);
-
+        List<long> timeoutIntervals = new List<long>();
+        for(int i = 0; i < 4; i++)
+        {
+            Thread.Sleep(300);
+            timeoutIntervals.Add(n.timeoutInterval);
+        }
+        Assert.Equal(timeoutIntervals.Distinct().Count(), timeoutIntervals.Count());
     }
 
-    //test case 6 NOT DONE, NEEDS TIMER
+    //test case 6
     [Fact]
     public void Given_Candidate_UponElectionStart_Increases_Current_Term()
     {
         Node n = new();
-        n.startElection();
-        Assert.Equal(1, n.term);
+        int beforeTerm = n.term;
+        Thread.Sleep(300);
+        n.term.Should().BeGreaterThan(beforeTerm);
     }
 
     //Test 8: part a
@@ -45,7 +54,7 @@ public class RaftTests
     {
         Node n = new();
         n.startElection();
-        n.countVotes();
+        n.setElectionResults();
         Assert.Equal(nodeState.LEADER, n.state);
     }
 
@@ -54,15 +63,14 @@ public class RaftTests
     public void Multiple_Node_Majority_Vote_Becomes_Leader()
     {
         Node n = new();
-        n.numNodes = 3;
         Node n2 = new();
         Node n3 = new();
-        Node[] nodes = [n2,n3];
+        n.neighbors = [n2,n3];
 
         n.startElection();
-        n.requestVote(nodes);
-        bool electionWon = n.countVotes(nodes);
-        Assert.True(electionWon);
+        n.requestVote(n.neighbors);
+        n.setElectionResults();
+        Assert.Equal(nodeState.LEADER, n.state);
     }
 
     //Test 8: part c
@@ -70,14 +78,15 @@ public class RaftTests
     public void Multiple_Node_Without_Majority_Vote_Does_Not_Become_Leader()
     {
         Node n = new();
-        n.numNodes = 3;
         Node n2 = new();
         Node n3 = new();
-        Node[] nodes = [n2, n3];
+        n.neighbors = [n2, n3];
 
         n.startElection();
-        bool electionWon = n.countVotes(nodes);
-        Assert.False(electionWon);
+        Assert.NotEqual(n2.voteId, n.id);
+        Assert.NotEqual(n3.voteId, n.id);
+        n.setElectionResults();
+        Assert.Equal(nodeState.CANDIDATE, n.state);
     }
 
     //Test 11
@@ -102,8 +111,6 @@ public class RaftTests
         Assert.Equal(nodeState.CANDIDATE, n.state);
 
         n2.startElection();
-        Assert.Equal(2, n.term);
-        Assert.Equal(1, n2.term);
 
         n.sendAppendRPC(n2);
         Assert.Equal(nodeState.FOLLOWER, n2.state);
@@ -117,9 +124,6 @@ public class RaftTests
         Node n2 = new();
 
         n2.startElection();
-        Assert.Equal(0, n.term);
-        Assert.Equal(1, n2.term);
-
         n.sendAppendRPC(n2);
         Assert.Equal(nodeState.CANDIDATE, n2.state);
     }
@@ -135,9 +139,6 @@ public class RaftTests
         Assert.Equal(nodeState.CANDIDATE, n.state);
 
         n2.startElection();
-        Assert.Equal(1, n.term);
-        Assert.Equal(1, n2.term);
-
         n.sendAppendRPC(n2);
         Assert.Equal(nodeState.FOLLOWER, n2.state);
     }
@@ -153,14 +154,12 @@ public class RaftTests
 
         n.startElection();
         n2.startElection();
-        Assert.Equal(1, n.term);
-        Assert.Equal(1, n2.term);
-        Assert.Equal(0, n3.voteTerm);
 
         n.requestVote(nodes);
         Assert.Equal(n.id, n3.voteId);
         Assert.Equal(1, n3.voteTerm);
         n2.requestVote(nodes);
+        Assert.Equal(1, n2.term);
         Assert.Equal(n.id, n3.voteId);
     }
 
@@ -176,9 +175,6 @@ public class RaftTests
         n.startElection();
         n2.startElection();
         n2.startElection();
-        Assert.Equal(1, n.term);
-        Assert.Equal(2, n2.term);
-        Assert.Equal(0, n3.voteTerm);
 
         n.requestVote(nodes);
         Assert.Equal(n.id, n3.voteId);

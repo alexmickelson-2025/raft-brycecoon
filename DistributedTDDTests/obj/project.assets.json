@@ -37,6 +37,24 @@
           }
         }
       },
+      "Meziantou.Xunit.ParallelTestFramework/2.3.0": {
+        "type": "package",
+        "dependencies": {
+          "xunit.extensibility.execution": "2.4.2"
+        },
+        "compile": {
+          "lib/net6.0/Meziantou.Xunit.ParallelTestFramework.dll": {}
+        },
+        "runtime": {
+          "lib/net6.0/Meziantou.Xunit.ParallelTestFramework.dll": {}
+        },
+        "build": {
+          "build/Meziantou.Xunit.ParallelTestFramework.props": {}
+        },
+        "buildMultiTargeting": {
+          "buildMultiTargeting/Meziantou.Xunit.ParallelTestFramework.props": {}
+        }
+      },
       "Microsoft.CodeCoverage/17.8.0": {
         "type": "package",
         "compile": {
@@ -1895,6 +1913,22 @@
         "lib/netstandard2.1/FluentAssertions.pdb",
         "lib/netstandard2.1/FluentAssertions.xml",
         "tools/init.ps1"
+      ]
+    },
+    "Meziantou.Xunit.ParallelTestFramework/2.3.0": {
+      "sha512": "KC4RB6PHTws4HD/PVJ5Si+GEABXCJdzd2FAb2NxZae9VFog6k0AKdOsr99H0HLnKRo/iC20/5SjiilKEh4Djuw==",
+      "type": "package",
+      "path": "meziantou.xunit.paralleltestframework/2.3.0",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "README.md",
+        "build/Meziantou.Xunit.ParallelTestFramework.props",
+        "buildMultiTargeting/Meziantou.Xunit.ParallelTestFramework.props",
+        "lib/net6.0/Meziantou.Xunit.ParallelTestFramework.dll",
+        "lib/netstandard2.0/Meziantou.Xunit.ParallelTestFramework.dll",
+        "meziantou.xunit.paralleltestframework.2.3.0.nupkg.sha512",
+        "meziantou.xunit.paralleltestframework.nuspec"
       ]
     },
     "Microsoft.CodeCoverage/17.8.0": {
@@ -5689,6 +5723,7 @@
     "net8.0": [
       "DistributedTDDProject1 >= 1.0.0",
       "FluentAssertions >= 8.0.0",
+      "Meziantou.Xunit.ParallelTestFramework >= 2.3.0",
       "Microsoft.NET.Test.Sdk >= 17.8.0",
       "NSubstitute >= 5.3.0",
       "coverlet.collector >= 6.0.0",
@@ -5753,6 +5788,10 @@
           "FluentAssertions": {
             "target": "Package",
             "version": "[8.0.0, )"
+          },
+          "Meziantou.Xunit.ParallelTestFramework": {
+            "target": "Package",
+            "version": "[2.3.0, )"
           },
           "Microsoft.NET.Test.Sdk": {
             "target": "Package",
