@@ -1,11 +1,12 @@
-DONE SO FAR
-3 X
-5 X
-8 X
-11 X
-12 X
-13 X
-14 X
-15 X
-17 X
-18 X
+Every Test is now done.
+New Since Last Time
+-5
+-6 
+-2 
+-4 
+-7 
+-19
+-1 
+-16
+-9 
+-10
