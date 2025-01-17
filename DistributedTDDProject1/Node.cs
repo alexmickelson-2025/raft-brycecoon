@@ -10,6 +10,7 @@ public enum nodeState {
 
 public class Node : INode
 {
+    public int timeoutMultiplier { get; set; }
     public Guid id { get; set; }
     public Guid voteId {get;set;}
     public int voteTerm {get;set;}
@@ -21,6 +22,7 @@ public class Node : INode
     public long timeoutInterval {get;set;}
     public Guid currentLeader {get;set;}
     public int numVotesRecieved {get;set;}
+    public double networkDelay {get;set; }
     int heartbeatsSent = 0; //for testing
 
     public Node()
@@ -30,7 +32,9 @@ public class Node : INode
         voteTerm = 0;
         timeoutInterval = Random.Shared.NextInt64(150,301);
         neighbors = [];
-        electionTimeoutTimer = new System.Timers.Timer(timeoutInterval);
+        timeoutMultiplier = 1;
+        networkDelay = 0;
+        electionTimeoutTimer = new System.Timers.Timer(timeoutInterval * timeoutMultiplier);
         electionTimeoutTimer.Elapsed += Timer_Timeout;
         electionTimeoutTimer.AutoReset = false;
         electionTimeoutTimer.Start();
@@ -40,31 +44,41 @@ public class Node : INode
     {
         if (numVotesRecieved >= Math.Ceiling(((double)neighbors.Length+1) / 2))
         {
-            state = nodeState.LEADER;
-            StartHeartbeat();
+            if (state == nodeState.CANDIDATE)
+            {
+                state = nodeState.LEADER;
+                currentLeader = id;
+                StartHeartbeat();
+            }
         }
     }
 
     private void StartHeartbeat()
     {
-        foreach(Node node in neighbors)
+        foreach(var node in neighbors)
         {
             sendAppendRPC(node);
         }
         heartbeatsSent++;
         heartbeatTimer = new System.Timers.Timer(50);
-        heartbeatTimer.Elapsed += sendHeartbeat;
+        heartbeatTimer.Elapsed += leaderTimeout;
         heartbeatTimer.AutoReset = true;
         heartbeatTimer.Start();
     }
 
-    private void sendHeartbeat(object sender, ElapsedEventArgs e)
+    public void leaderTimeout(object sender, ElapsedEventArgs e)
     {
-        foreach(Node node in neighbors)
+        sendHeartbeatRPC(neighbors);
+    }
+
+    public void sendHeartbeatRPC(INode[] nodes)
+    {
+        Thread.Sleep((int)(networkDelay * 1000));
+        //Thread.Sleep(500);
+        foreach (var node in nodes)
         {
             sendAppendRPC(node);
         }
-        heartbeatsSent++;
     }
 
     public void requestVote(INode[] nodes)
@@ -87,12 +101,17 @@ public class Node : INode
 
     public string sendAppendRPC(INode recievingNode)
     {
+        Thread.Sleep((int)(networkDelay * 1000));
         if (recievingNode.state == nodeState.CANDIDATE && (term >= recievingNode.term))
         {
             recievingNode.state = nodeState.FOLLOWER;
         }
-        if (recievingNode.term <= term)
+        if (recievingNode.term < term)
         {
+            if(recievingNode.state != nodeState.FOLLOWER)
+            {
+                recievingNode.state = nodeState.FOLLOWER;
+            }
             recievingNode.currentLeader = id;
             recievingNode.ResetTimer();
             return "recieved";
@@ -102,23 +121,31 @@ public class Node : INode
 
     public void startElection()
     {
-        voteId = id;
-        numVotesRecieved++;
-        term++;
-        state = nodeState.CANDIDATE;
+        if (state != nodeState.LEADER)
+        {
+            voteId = id;
+            numVotesRecieved++;
+            term++;
+            state = nodeState.CANDIDATE;
+        }
     }
 
     public void Timer_Timeout(object sender, ElapsedEventArgs e)
     {
-        startElection();
-        ResetTimer();
+        if (state != nodeState.LEADER)
+        {
+            startElection();
+            requestVote(neighbors);
+            setElectionResults();
+            ResetTimer();
+        }
     }
 
     public void ResetTimer()
     {
         electionTimeoutTimer.Stop();
         timeoutInterval = Random.Shared.NextInt64(150, 301);
-        electionTimeoutTimer = new System.Timers.Timer(timeoutInterval);
+        electionTimeoutTimer = new System.Timers.Timer(timeoutInterval * timeoutMultiplier);
         electionTimeoutTimer.Elapsed += Timer_Timeout;
         electionTimeoutTimer.AutoReset = false;
         electionTimeoutTimer.Start();

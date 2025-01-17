@@ -9,19 +9,21 @@ namespace DistributedTDDProject1;
 
 public interface INode
 {
-    Guid id { get; set; }
-    Guid voteId { get; set; }
-    int voteTerm { get; set; }
-    nodeState state { get; set; }
-    Guid currentLeader { get; set; }
-    int term { get; set; }
+    public Guid id { get; set; }
+    public Guid voteId { get; set; }
+    public int voteTerm { get; set; }
+    public nodeState state { get; set; }
+    public Guid currentLeader { get; set; }
+    public int term { get; set; }
+    public long timeoutInterval { get; set; }
+    public int timeoutMultiplier { get; set; }
+    public double networkDelay { get; set; }
 
 
     //functions
-    void setElectionResults();
-    void requestVote(INode[] nodes);
-    string sendAppendRPC(INode recievingNode);
-    void startElection();
-    void Timer_Timeout(object sender, ElapsedEventArgs e);
-    void ResetTimer();
+    public void requestVote(INode[] nodes);
+    public string sendAppendRPC(INode recievingNode);
+    public void sendVoteRequest(INode recievingNode);
+    public void sendHeartbeatRPC(INode[] nodes);
+    public void ResetTimer();
 }
