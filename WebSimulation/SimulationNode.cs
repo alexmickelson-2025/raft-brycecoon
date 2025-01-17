@@ -12,41 +12,40 @@ public class SimulationNode : INode
         this.InnerNode = node;
     }
 
-    Guid INode.id { get => InnerNode.id; set => InnerNode.id = value; }
-
-    Guid INode.voteId { get => InnerNode.voteId; set => InnerNode.voteId = value; }
-    int INode.voteTerm { get => InnerNode.voteTerm; set => InnerNode.voteTerm = value; }
-    int INode.term { get => InnerNode.term; set => InnerNode.term = value; }
-    nodeState INode.state { get => InnerNode.state; set => InnerNode.state = value; }
-    Guid INode.currentLeader { get => InnerNode.currentLeader; set => InnerNode.currentLeader = value; }
+    public Guid id { get => InnerNode.id; set => InnerNode.id = value; }
+    public Guid voteId { get => InnerNode.voteId; set => InnerNode.voteId = value; }
+    public int voteTerm { get => InnerNode.voteTerm; set => InnerNode.voteTerm = value; }
+    public int term { get => InnerNode.term; set => InnerNode.term = value; }
+    public int timeoutMultiplier { get => InnerNode.timeoutMultiplier; set => InnerNode.timeoutMultiplier = value; }
+    public double networkDelay { get => InnerNode.networkDelay; set => InnerNode.networkDelay = value; }
+    public long timeoutInterval { get => InnerNode.timeoutInterval; set => InnerNode.timeoutInterval = value; }
+    public nodeState state { get => InnerNode.state; set => InnerNode.state = value; }
+    public Guid currentLeader { get => InnerNode.currentLeader; set => InnerNode.currentLeader = value; }
 
     public void requestVote(INode[] nodes)
     {
-        throw new NotImplementedException();
+        InnerNode.requestVote(nodes);
     }
 
     public void ResetTimer()
     {
-        throw new NotImplementedException();
+        InnerNode.ResetTimer();
     }
 
     public string sendAppendRPC(INode recievingNode)
     {
-        throw new NotImplementedException();
+        Thread.Sleep(500);
+        return InnerNode.sendAppendRPC(recievingNode);
     }
 
-    public void setElectionResults()
+    public void sendHeartbeatRPC(INode[] nodes)
     {
-        throw new NotImplementedException();
+        Thread.Sleep(500);
+        InnerNode.sendHeartbeatRPC(nodes);
     }
 
-    public void startElection()
+    public void sendVoteRequest(INode recievingNode)
     {
-        throw new NotImplementedException();
-    }
-
-    public void Timer_Timeout(object sender, ElapsedEventArgs e)
-    {
-        throw new NotImplementedException();
+        InnerNode.sendVoteRequest(recievingNode);
     }
 }

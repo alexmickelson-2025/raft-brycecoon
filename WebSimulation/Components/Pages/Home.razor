@@ -4,21 +4,85 @@
 
 <PageTitle>Home</PageTitle>
 
-<h1>Hello, world!</h1>
-
-<button @onclick="startSimulation">start Simulation</button>
-
-@foreach (var node in nodes ?? new List<SimulationNode>())
-{
-    <div>
-        @node.InnerNode.id
+<div class="container mt-4">
+    <div class="row mb-4">
+        <div class="col-12 text-center">
+            <button class="btn btn-primary btn-lg" @onclick="startSimulation">Start Simulation</button>
+        </div>
     </div>
-}
+
+    <div class="row">
+        @foreach (var node in nodes)
+        {
+            <div class="col-12 col-md-4 mb-4">
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <h5 class="card-title">Node: @node.id</h5>
+                        <p><strong>State:</strong> @node.state</p>
+                        <p><strong>Term:</strong> @node.term</p>
+                        <p><strong>Perceived Current Leader:</strong> @node.currentLeader</p>
+                        <p><strong>Timeout:</strong> @(node.timeoutInterval * timeoutMultiplier)</p>
+
+                        <!-- Progress Bar -->
+                        <div class="progress" role="progressbar" aria-label="Timeout Progress"
+                             aria-valuenow="@node.timeoutInterval"
+                             aria-valuemin="0" aria-valuemax="@(300 * timeoutMultiplier)">
+                            <div class="progress-bar bg-success"
+                                 style="width: @(((node.timeoutInterval)/(double)(300)) * 100)%"></div>
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    Network Delay: @node.networkDelay
+                </div>
+            </div>
+        }
+    </div>
+
+    <div class="row mt-5">
+        <div class="col-12 col-md-6">
+            <div class="slider-item mb-4">
+                <label for="networkDelay">Network Delay (seconds)</label>
+                <input type="range" id="networkDelay" @onchange="changeNetworkDelay" min="0" max="5" step="0.1" class="form-range" />
+                <div class="slider-value">Slider Value: @networkDelay</div>
+            </div>
+
+            <div class="slider-item">
+                <label for="timeoutMultiplier">Timeout Multiplier</label>
+                <input type="range" id="timeoutMultiplier" @onchange="changeElectionTimoutMultiplier" min="1" max="5" step="1" class="form-range" />
+                <div class="slider-value">Slider Value: @timeoutMultiplier X</div>
+            </div>
+        </div>
+    </div>
+
+</div>
 
 @code {
-    List<SimulationNode>? nodes;
+    List<SimulationNode> nodes = new();
+    private Timer timer;
+    private double networkDelay = 0;
+    private int timeoutMultiplier = 1;
 
-    void startSimulation() {
+    void changeElectionTimoutMultiplier(ChangeEventArgs e)
+    {
+        timeoutMultiplier = int.Parse(e.Value.ToString());
+        foreach(var node in nodes)
+        {
+            node.InnerNode.timeoutMultiplier = timeoutMultiplier;
+        }
+    }
+
+    void changeNetworkDelay(ChangeEventArgs e)
+    {
+        networkDelay = double.Parse(e.Value.ToString());
+        foreach (var node in nodes)
+        {
+            node.networkDelay = networkDelay;
+        }
+    }
+
+    void startSimulation()
+    {
         var node1 = new Node();
         var node2 = new Node();
         var node3 = new Node();
@@ -27,10 +91,17 @@
         var SimulationNode2 = new SimulationNode(node2);
         var SimulationNode3 = new SimulationNode(node3);
 
-        node1.neighbors = [SimulationNode2, SimulationNode3];
-        node2.neighbors = [SimulationNode1, SimulationNode3];
-        node3.neighbors = [SimulationNode1, SimulationNode2];
+        node1.neighbors = new[] { SimulationNode2, SimulationNode3 };
+        node2.neighbors = new[] { SimulationNode1, SimulationNode3 };
+        node3.neighbors = new[] { SimulationNode1, SimulationNode2 };
 
         nodes = new List<SimulationNode> { SimulationNode1, SimulationNode2, SimulationNode3 };
+
+        StateHasChanged();
+
+        timer = new Timer(_ =>
+        {
+            InvokeAsync(StateHasChanged);
+        }, null, 0, 200);
     }
 }
