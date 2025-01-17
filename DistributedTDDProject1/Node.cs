@@ -101,7 +101,6 @@ public class Node : INode
 
     public string sendAppendRPC(INode recievingNode)
     {
-        Thread.Sleep((int)(networkDelay * 1000));
         if (recievingNode.state == nodeState.CANDIDATE && (term >= recievingNode.term))
         {
             recievingNode.state = nodeState.FOLLOWER;
