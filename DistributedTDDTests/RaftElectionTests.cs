@@ -4,7 +4,7 @@ using NSubstitute;
 
 namespace DistributedTDDTests;
 
-public class RaftTests
+public class RaftElectionTests
 {
     //Test 1
     [Fact]
@@ -322,5 +322,19 @@ public class RaftTests
         Thread.Sleep(149);
         Assert.Equal(nodeState.FOLLOWER, n2.state);
         Assert.Equal(nodeState.FOLLOWER, n3.state);
+    }
+
+
+
+}
+
+//----------------------------------------------------------LOG REPLICATION TESTS--------------------------------------------------//
+public class RaftLogReplicationTests
+{
+    [Fact]
+    public void Follower_Commits_Safe_Message_To_Its_State_Machine()
+    {
+        Node n = new();
+
     }
 }
