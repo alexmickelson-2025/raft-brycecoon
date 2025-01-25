@@ -1,12 +1,23 @@
-Every Test is now done.
-New Since Last Time
--5
--6 
--2 
--4 
--7 
--19
--1 
--16
--9 
--10
+Log Replication Tests:
+
+1 [X]  
+2 [X]  
+3 [X]  
+4 [X]  
+5 [X]  
+6 [X]  
+7 [ ]  
+8 [X]  
+9 [X]  
+10 [X]  
+11 [ ]  
+12 [ ]  
+13 [X]  
+14 [ ]  
+15 [ ]  
+16 [ ]  
+17 [ ]  
+18 [ ]  
+19 [ ]  
+20 [ ]
+
