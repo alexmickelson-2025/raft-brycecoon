@@ -22,8 +22,14 @@ public interface INode
 
     //functions
     public void requestVote(INode[] nodes);
-    public string sendAppendRPC(INode recievingNode);
     public void sendVoteRequest(INode recievingNode);
+    public void RecieveVoteRequest(Guid candidateId, int candidateTerm);
+    public void recieveResponseToVoteRequest(bool voteResponse);
     public void sendHeartbeatRPC(INode[] nodes);
+    public void sendAppendRPCRequest(INode recievingNode, string message);
+
+    void ReceiveAppendEntryRequest(Guid leaderId, int commitIndex, string message);
+    void recieveResponseToAppendEntryRPCRequest(Guid sendingNode, bool received);
     public void ResetTimer();
+
 }
