@@ -1,4 +1,5 @@
 using DistributedTDDProject1;
+using Microsoft.VisualStudio.TestPlatform.CommunicationUtilities;
 using NSubstitute;
 using System.Collections;
 using System.Collections.Generic;
@@ -96,7 +97,7 @@ public class LogReplicationTests
         node.sendAppendRPCRequest(fakeNode1, "Hello");
         fakeNode1.Received().ReceiveAppendEntryRequest(node.id,0, "Hello");
 
-        node.commitLogToStateMachine(1);
+        //node.commitLogToStateMachine(1);
         node.sendAppendRPCRequest(fakeNode1, "Hello");
         fakeNode1.Received().ReceiveAppendEntryRequest(node.id, 1, "Hello");
     }
@@ -170,7 +171,7 @@ public class LogReplicationTests
     {
         Node node = new Node();
         node.recieveCommandFromClient(1, "hello");
-        node.commitLogToStateMachine(1);
+        //node.commitLogToStateMachine(1);
 
         Assert.Equal(1, node.highestCommittedLogIndex);
         Assert.Equal("hello", node.stateMachine[1]);
@@ -191,7 +192,7 @@ public class LogReplicationTests
     {
         Node node = new Node();
         node.recieveCommandFromClient(1, "hello");
-        node.commitLogToStateMachine(1);
+        //node.commitLogToStateMachine(1);
 
         Assert.Equal(1, node.highestCommittedLogIndex);
         Assert.Equal("hello", node.stateMachine[1]);

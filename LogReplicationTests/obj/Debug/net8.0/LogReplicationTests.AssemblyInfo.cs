@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("LogReplicationTests")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+c1dfdba3aec67edf87b03f501a4d00eba2e4ffe2")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+4e237399a9bddd00c965ae73bed651b5293c861a")]
 [assembly: System.Reflection.AssemblyProductAttribute("LogReplicationTests")]
 [assembly: System.Reflection.AssemblyTitleAttribute("LogReplicationTests")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
