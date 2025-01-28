@@ -18,18 +18,21 @@ public interface INode
     public long timeoutInterval { get; set; }
     public int timeoutMultiplier { get; set; }
     public double networkDelay { get; set; }
+    public List<Log> logs { get; set; }
 
 
     //functions
-    public void requestVote(INode[] nodes);
-    public void sendVoteRequest(INode recievingNode);
-    public void RecieveVoteRequest(Guid candidateId, int candidateTerm);
-    public void recieveResponseToVoteRequest(bool voteResponse);
-    public void sendHeartbeatRPC(INode[] nodes);
-    public void sendAppendRPCRequest(INode recievingNode, string message);
+    public Task RequestVote(INode[] nodes);
+    public Task sendVoteRequest(INode recievingNode);
+    public Task RecieveVoteRequest(Guid candidateId, int candidateTerm);
+    public Task recieveResponseToVoteRequest(bool voteResponse);
+    public Task sendHeartbeatRPC(INode[] nodes);
+    public Task sendAppendRPCRequest(INode recievingNode, string message);
 
-    void ReceiveAppendEntryRequest(Guid leaderId, int commitIndex, string message);
-    void recieveResponseToAppendEntryRPCRequest(Guid sendingNode, bool received);
+    public Task ReceiveAppendEntryRequest(Guid leaderId, int commitIndex, string message);
+    public Task recieveResponseToAppendEntryRPCRequest(Guid sendingNode, bool received);
     public void ResetTimer();
+    public void Pause();
+    public void Resume();
 
 }

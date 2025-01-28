@@ -3,7 +3,8 @@ using System.Xml.Linq;
 
 namespace DistributedTDDProject1;
 
-public enum nodeState { 
+public enum nodeState
+{
     FOLLOWER,
     CANDIDATE,
     LEADER
@@ -13,17 +14,17 @@ public class Node : INode
 {
     public int timeoutMultiplier { get; set; }
     public Guid id { get; set; }
-    public Guid voteId {get;set;}
-    public int voteTerm {get;set;}
-    public int term {get;set;}
-    public nodeState state {get;set;} //starts as the first option (follower)
-    public INode[] neighbors {get;set;}
-    System.Timers.Timer electionTimeoutTimer {get;set;}
-    System.Timers.Timer heartbeatTimer {get;set;}
-    public long timeoutInterval {get;set;}
-    public Guid currentLeader {get;set;}
-    public int numVotesRecieved {get;set;}
-    public double networkDelay {get;set; }
+    public Guid voteId { get; set; }
+    public int voteTerm { get; set; }
+    public int term { get; set; }
+    public nodeState state { get; set; } //starts as the first option (follower)
+    public INode[] neighbors { get; set; }
+    System.Timers.Timer electionTimeoutTimer { get; set; }
+    System.Timers.Timer heartbeatTimer { get; set; }
+    public long timeoutInterval { get; set; }
+    public Guid currentLeader { get; set; }
+    public int numVotesRecieved { get; set; }
+    public double networkDelay { get; set; }
     int heartbeatsSent = 0;
     public List<Log> logs { get; set; }
     public Dictionary<int, string> stateMachine;
@@ -38,7 +39,7 @@ public class Node : INode
         id = Guid.NewGuid();
         term = 0;
         voteTerm = 0;
-        timeoutInterval = Random.Shared.NextInt64(150,301);
+        timeoutInterval = Random.Shared.NextInt64(150, 301);
         neighbors = [];
         timeoutMultiplier = 1;
         networkDelay = 0;
@@ -55,46 +56,47 @@ public class Node : INode
         electionTimeoutTimer.Start();
     }
 
-    public void requestVote(INode[] nodes)
+    public async Task RequestVote(INode[] nodes)
     {
         foreach (var node in nodes)
         {
-            sendVoteRequest(node);
+            await sendVoteRequest(node);
         }
     }
 
-    public void sendVoteRequest(INode recievingNode)
+    public async Task sendVoteRequest(INode recievingNode)
     {
         if (recievingNode.voteTerm < term)
         {
-            recievingNode.RecieveVoteRequest(id, term);
+            await recievingNode.RecieveVoteRequest(id, term);
         }
     }
 
-    public void RecieveVoteRequest(Guid candidateId, int candidateTerm)
+    public async Task RecieveVoteRequest(Guid candidateId, int candidateTerm)
     {
         var candidateNode = neighbors.FirstOrDefault((n) => n.id == candidateId);
         if (candidateNode == null) return;
-        if (candidateTerm >= term)
+
+        if (candidateTerm >= voteTerm)
         {
             voteTerm = candidateTerm;
             voteId = candidateId;
             state = nodeState.FOLLOWER;
-            candidateNode.recieveResponseToVoteRequest(true);
+            await candidateNode.recieveResponseToVoteRequest(true);
         }
         else
         {
-            candidateNode.recieveResponseToVoteRequest(false);
+            await candidateNode.recieveResponseToVoteRequest(false);
         }
     }
 
-    public void recieveResponseToVoteRequest(bool voteResponse)
+    public async Task recieveResponseToVoteRequest(bool voteResponse)
     {
         if (voteResponse) { numVotesRecieved++; }
-        setElectionResults();
+        await setElectionResults();
     }
 
-    public void setElectionResults()
+    public async Task setElectionResults()
     {
         if (numVotesRecieved >= Math.Ceiling(((double)neighbors.Length + 1) / 2))
         {
@@ -103,89 +105,96 @@ public class Node : INode
                 state = nodeState.LEADER;
                 currentLeader = id;
                 foreach (var node in neighbors) { neighborNextIndexes[node.id] = nextIndex; }
-                StartHeartbeat();
+                await StartHeartbeat();
             }
         }
     }
 
-    public void StartHeartbeat()
+    public async Task StartHeartbeat()
     {
         foreach (var node in neighbors)
         {
-            sendAppendRPCRequest(node, "");
+            await sendAppendRPCRequest(node, "");
         }
+
         heartbeatTimer = new System.Timers.Timer(50);
-        heartbeatTimer.Elapsed += leaderTimeout;
+        heartbeatTimer.Elapsed += async (sender, e) => await leaderTimeout(sender, e);
         heartbeatTimer.AutoReset = true;
         heartbeatTimer.Start();
     }
 
-    public void leaderTimeout(object sender, ElapsedEventArgs e)
+    public async Task leaderTimeout(object sender, ElapsedEventArgs e)
     {
-        sendHeartbeatRPC(neighbors);
+        await sendHeartbeatRPC(neighbors);
     }
 
-    public void sendHeartbeatRPC(INode[] nodes)
+
+    public async Task sendHeartbeatRPC(INode[] nodes)
     {
         foreach (var node in nodes)
         {
-            sendAppendRPCRequest(node, "");
+            await sendAppendRPCRequest(node, "");
         }
     }
 
-    //leader calls on follower
-    public void sendAppendRPCRequest(INode recievingNode, string message)
+    public async Task sendAppendRPCRequest(INode recievingNode, string message)
     {
         //follower runs this
-        recievingNode.ReceiveAppendEntryRequest(id, highestCommittedLogIndex, logs[prevIndex].message);
+        await recievingNode.ReceiveAppendEntryRequest(id, highestCommittedLogIndex, message);
     }
 
-    public void ReceiveAppendEntryRequest(Guid leaderId, int commitIndex, string message)
+    public async Task ReceiveAppendEntryRequest(Guid leaderId, int commitIndex, string message)
     {
-        var leaderNode = neighbors.FirstOrDefault((n) => n.id == leaderId);
-
-        Log newLog = new Log
+        INode leaderNode = neighbors.FirstOrDefault((n) => n.id == leaderId);
+        if (leaderNode == null)
         {
-            term = term,
-            message = message
-        };
+            throw new Exception("Leader Was Null");
+        }
 
-        logs.Add(newLog);
-        prevIndex = logs.Count - 1;
-        nextIndex = logs.Count;
+        if (leaderNode.term >= term)
+        {
+            currentLeader = leaderNode.id;
+            if (state != nodeState.FOLLOWER) { state = nodeState.FOLLOWER; }
 
-        leaderNode?.recieveResponseToAppendEntryRPCRequest(id, true);  //include the data like who is the response from, and did they reject it
+            //Log newLog = new Log
+            //{
+            //    term = term,
+            //    message = message
+            //};
+
+            //logs.Add(newLog);
+            //prevIndex = logs.Count - 1;
+            //nextIndex = logs.Count;
+            ResetTimer();
+            await leaderNode.recieveResponseToAppendEntryRPCRequest(id, true);
+        }
+        else if (leaderNode.term < term)
+        {
+            await leaderNode.recieveResponseToAppendEntryRPCRequest(id, false);
+        }
     }
-
-    //Leaders response to requested data
-    public void recieveResponseToAppendEntryRPCRequest(Guid sendingNode, bool received)
+    public async Task recieveResponseToAppendEntryRPCRequest(Guid sendingNode, bool received)
     {
-
-        if (received)
-        {
-            if (!LogToTimesReceived.ContainsKey(prevIndex))
-            {
-                LogToTimesReceived[prevIndex] = 2; //2 already because the leader obviously received it
-            }
-            else
-            {
-                LogToTimesReceived[prevIndex] += 1;
-            }
-        }
-
-        if(!LogToTimesReceived.ContainsKey(0))
-        {
-            return;
-        }
-
-        if (LogToTimesReceived[prevIndex] >= Math.Ceiling(((double)neighbors.Length + 1) / 2)) //majority won
-        {
-            int potentialCommittedLogkey = logs[prevIndex].key;
-            commitLogToStateMachine(potentialCommittedLogkey);
-        }
+        // If the log entry is successfully received, handle the log updates (commented out here).
+        // if (received)
+        // {
+        //     if (!LogToTimesReceived.ContainsKey(prevIndex))
+        //     {
+        //         LogToTimesReceived[prevIndex] = 2;
+        //     }
+        //     else
+        //     {
+        //         LogToTimesReceived[prevIndex] += 1;
+        //     }
+        //     if (LogToTimesReceived[prevIndex] >= Math.Ceiling(((double)neighbors.Length + 1) / 2))
+        //     {
+        //         // Commit the log to state machine
+        //     }
+        // }
     }
 
-    public void startElection()
+
+    public async Task startElection()
     {
         if (state != nodeState.LEADER)
         {
@@ -193,15 +202,16 @@ public class Node : INode
             numVotesRecieved = 1;
             term++;
             state = nodeState.CANDIDATE;
+
+            await RequestVote(neighbors);
         }
     }
 
-    public void Timer_Timeout(object sender, ElapsedEventArgs e)
+    public async void Timer_Timeout(object sender, ElapsedEventArgs e)
     {
         if (state != nodeState.LEADER)
         {
-            startElection();
-            requestVote(neighbors);
+            await startElection();
             ResetTimer();
         }
     }
@@ -227,10 +237,25 @@ public class Node : INode
         nextIndex = logs.Count;
     }
 
-    public void commitLogToStateMachine(int logIndex)
+    //public void commitLogToStateMachine(string message)
+    //{
+    //    var log = logs.FirstOrDefault(x => x.key == logIndex);
+    //    if (log != null)
+    //    {
+    //        stateMachine[highestCommittedLogIndex + 1] = log.message;
+    //        highestCommittedLogIndex = stateMachine.Count;
+    //    }
+    //}
+
+    public void Pause()
     {
-        stateMachine[highestCommittedLogIndex + 1] = logs.Where(x => x.key == logIndex).FirstOrDefault().message;
-        highestCommittedLogIndex = stateMachine.Count;
+        heartbeatTimer.Stop();
+        electionTimeoutTimer.Stop();
     }
 
+    public void Resume()
+    {
+        heartbeatTimer.Start();
+        electionTimeoutTimer.Start();
+    }
 }
