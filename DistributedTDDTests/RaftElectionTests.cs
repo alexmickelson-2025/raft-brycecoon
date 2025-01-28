@@ -199,17 +199,17 @@ public class RaftElectionTests
 
     //Test 11
     [Fact]
-    public void Candidate_Votes_For_Itself_In_Election()
+    public async Task Candidate_Votes_For_Itself_In_Election()
     {
         Node n = new();
-        n.startElection();
+        await n.startElection();
         Assert.Equal(n.voteId, n.id);
     }
 
 
     //Test 12: a
     [Fact]
-    public void Candidate_Loses_To_Leader_With_Later_Term()
+    public async Task Candidate_Loses_To_Leader_With_Later_Term()
     {
         Node node = new();
         var fakeNode1 = Substitute.For<INode>();
@@ -217,14 +217,14 @@ public class RaftElectionTests
         node.neighbors = [fakeNode1, fakeNode2];
         fakeNode1.term = 5;
 
-        node.startElection();
-        node.ReceiveAppendEntryRequest(fakeNode1.id, 1, "");
+        await node.startElection();
+        await node.ReceiveAppendEntryRequest(fakeNode1.id, 1, "");
         Assert.Equal(nodeState.FOLLOWER, node.state);
     }
 
     //Test 12: b
     [Fact]
-    public void Candidate_Does_Not_Lose_To_Leader_With_Earlier_Term()
+    public async Task Candidate_Does_Not_Lose_To_Leader_With_Earlier_Term()
     {
         Node node = new();
         var fakeNode1 = Substitute.For<INode>();
@@ -232,14 +232,14 @@ public class RaftElectionTests
         node.neighbors = [fakeNode1, fakeNode2];
         fakeNode1.term = 0;
 
-        node.startElection();
-        node.ReceiveAppendEntryRequest(fakeNode1.id, 1, "");
+        await node.startElection();
+        await node.ReceiveAppendEntryRequest(fakeNode1.id, 1, "");
         Assert.Equal(nodeState.CANDIDATE, node.state);
     }
 
     //Test 13
     [Fact]
-    public void Candidate_Loses_To_Leader_With_Equal_Term()
+    public async Task Candidate_Loses_To_Leader_With_Equal_Term()
     {
         Node node = new();
         var fakeNode1 = Substitute.For<INode>();
@@ -247,9 +247,9 @@ public class RaftElectionTests
         node.neighbors = [fakeNode1, fakeNode2];
         fakeNode1.term = 1;
 
-        node.startElection();
+        await node.startElection();
         Assert.Equal(1, node.term);
-        node.ReceiveAppendEntryRequest(fakeNode1.id, 1, "");
+        await node.ReceiveAppendEntryRequest(fakeNode1.id, 1, "");
         Assert.Equal(nodeState.FOLLOWER, node.state);
     }
 
