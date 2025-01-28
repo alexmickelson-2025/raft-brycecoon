@@ -21,10 +21,36 @@ public class SimulationNode : INode
     public long timeoutInterval { get => InnerNode.timeoutInterval; set => InnerNode.timeoutInterval = value; }
     public nodeState state { get => InnerNode.state; set => InnerNode.state = value; }
     public Guid currentLeader { get => InnerNode.currentLeader; set => InnerNode.currentLeader = value; }
+    public List<Log> logs { get => InnerNode.logs; set => InnerNode.logs = value; }
 
-    public void requestVote(INode[] nodes)
+    public void Pause()
     {
-        InnerNode.requestVote(nodes);
+        InnerNode.Resume();
+    }
+
+    public async Task ReceiveAppendEntryRequest(Guid leaderId, int commitIndex, string message)
+    {
+        await InnerNode.ReceiveAppendEntryRequest(leaderId, commitIndex, message);
+    }
+
+    public async Task recieveResponseToAppendEntryRPCRequest(Guid sendingNode, bool received)
+    {
+        await InnerNode.recieveResponseToAppendEntryRPCRequest((Guid)sendingNode, received);
+    }
+
+    public async Task recieveResponseToVoteRequest(bool voteResponse)
+    {
+        await InnerNode.recieveResponseToVoteRequest(voteResponse);
+    }
+
+    public async Task RecieveVoteRequest(Guid candidateId, int candidateTerm)
+    {
+        await InnerNode.RecieveVoteRequest((Guid)candidateId, candidateTerm);
+    }
+
+    public async Task RequestVote(INode[] nodes)
+    {
+        await InnerNode.RequestVote(nodes);
     }
 
     public void ResetTimer()
@@ -32,20 +58,23 @@ public class SimulationNode : INode
         InnerNode.ResetTimer();
     }
 
-    public string sendAppendRPC(INode recievingNode)
+    public void Resume()
     {
-        Thread.Sleep(500);
-        return InnerNode.sendAppendRPC(recievingNode);
+        InnerNode.Resume();
     }
 
-    public void sendHeartbeatRPC(INode[] nodes)
+    public async Task sendAppendRPCRequest(INode recievingNode, string message)
     {
-        Thread.Sleep(500);
-        InnerNode.sendHeartbeatRPC(nodes);
+        await InnerNode.sendAppendRPCRequest(recievingNode, message);
     }
 
-    public void sendVoteRequest(INode recievingNode)
+    public async Task sendHeartbeatRPC(INode[] nodes)
     {
-        InnerNode.sendVoteRequest(recievingNode);
+        await InnerNode.sendHeartbeatRPC(nodes);
+    }
+
+    public async Task sendVoteRequest(INode recievingNode)
+    {
+        await InnerNode.sendVoteRequest(recievingNode);
     }
 }

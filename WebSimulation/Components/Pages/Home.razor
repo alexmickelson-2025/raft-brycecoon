@@ -14,28 +14,32 @@
     <div class="row">
         @foreach (var node in nodes)
         {
-            <div class="col-12 col-md-4 mb-4">
-                <div class="card shadow-sm">
-                    <div class="card-body">
-                        <h5 class="card-title">Node: @node.id</h5>
-                        <p><strong>State:</strong> @node.state</p>
-                        <p><strong>Term:</strong> @node.term</p>
-                        <p><strong>Perceived Current Leader:</strong> @node.currentLeader</p>
-                        <p><strong>Timeout:</strong> @(node.timeoutInterval * timeoutMultiplier)</p>
+                <div class="col-12 col-md-4 mb-4">
+                    <div class="card shadow-sm">
+                        <div class="card-body">
+                            <h5 class="card-title">Node: @node.id</h5>
+                            <p><strong>State:</strong> @node.state</p>
+                            <p><strong>Term:</strong> @node.term</p>
+                            <p><strong>Perceived Current Leader:</strong> @node.currentLeader</p>
+                            <p><strong>Timeout:</strong> @(node.timeoutInterval * timeoutMultiplier)</p>
 
-                        <!-- Progress Bar -->
-                        <div class="progress" role="progressbar" aria-label="Timeout Progress"
-                             aria-valuenow="@node.timeoutInterval"
-                             aria-valuemin="0" aria-valuemax="@(300 * timeoutMultiplier)">
-                            <div class="progress-bar bg-success"
-                                 style="width: @(((node.timeoutInterval)/(double)(300)) * 100)%"></div>
+                            <!-- Progress Bar -->
+                            <div class="progress" role="progressbar" aria-label="Timeout Progress"
+                                 aria-valuenow="@node.timeoutInterval"
+                                 aria-valuemin="0" aria-valuemax="@(300 * timeoutMultiplier)">
+                                <div class="progress-bar bg-success"
+                                     style="width: @(((node.timeoutInterval)/(double)(300)) * 100)%"></div>
+                            </div>
+
+        <button @onClick="() => PauseNode(node.id)">
+           Stop Node
+        </button>
                         </div>
                     </div>
+                    <div>
+                        Network Delay: @node.networkDelay
+                    </div>
                 </div>
-                <div>
-                    Network Delay: @node.networkDelay
-                </div>
-            </div>
         }
     </div>
 
@@ -66,7 +70,7 @@
     void changeElectionTimoutMultiplier(ChangeEventArgs e)
     {
         timeoutMultiplier = int.Parse(e.Value.ToString());
-        foreach(var node in nodes)
+        foreach (var node in nodes)
         {
             node.InnerNode.timeoutMultiplier = timeoutMultiplier;
         }
@@ -103,5 +107,11 @@
         {
             InvokeAsync(StateHasChanged);
         }, null, 0, 200);
+    }
+
+    void PauseNode(Guid nodeToPauseId)
+    {
+        var node = nodes.FirstOrDefault((n) => n.id == nodeToPauseId);
+        node.Pause();
     }
 }
