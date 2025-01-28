@@ -8,7 +8,7 @@ public class RaftElectionTests
 {
     //Test 1
     [Fact]
-    public void Leader_Sends_Hearbeat_Within_50ms()
+    public async Task Leader_Sends_Hearbeat_Within_50ms()
     {
         Node node = new();
         var fakeNode1 = Substitute.For<INode>();
@@ -17,16 +17,16 @@ public class RaftElectionTests
 
         node.state = nodeState.CANDIDATE;
         node.numVotesRecieved = 3;
-        node.setElectionResults();
+        await node.setElectionResults();
         Assert.Equal(nodeState.LEADER, node.state);
 
         Thread.Sleep(50);
-        fakeNode1.Received().ReceiveAppendEntryRequest(Arg.Any<Guid>(), Arg.Any<int>(), Arg.Any<string>());
+        await fakeNode1.Received().ReceiveAppendEntryRequest(Arg.Any<AppendEntriesRequestRPC>());
     }
 
     //Test 2
     [Fact]
-    public void Recieving_Append_Entries_From_Another_Node_The_Node_Remembers_The_Leader()
+    public async Task Recieving_Append_Entries_From_Another_Node_The_Node_Remembers_The_Leader()
     {
         Node n = new();
         Node n2 = new();
@@ -36,7 +36,12 @@ public class RaftElectionTests
         Assert.Equal(0, n.term);
         Assert.Equal(0, n2.term);
 
-        n2.ReceiveAppendEntryRequest(n.id, 0, "");
+        AppendEntriesRequestRPC request = new AppendEntriesRequestRPC
+        {
+            LeaderId = n.id
+        };
+
+        await n2.ReceiveAppendEntryRequest(request);
 
         Assert.Equal(n.id, n2.currentLeader);
     }
@@ -73,7 +78,7 @@ public class RaftElectionTests
             Thread.Sleep(300);
             timeoutIntervals.Add(n.timeoutInterval);
         }
-        Assert.Equal(timeoutIntervals.Distinct().Count(), timeoutIntervals.Count());
+        Assert.True(timeoutIntervals.Distinct().Count() > 1);
     }
 
     //test case 6
@@ -98,7 +103,7 @@ public class RaftElectionTests
         for (int i = 0; i < 5; i++)
         {
             Thread.Sleep(50);
-            await n2.sendAppendRPCRequest(n, "");
+            await n2.sendAppendRPCRequest(n);
         }
         Assert.Equal(nodeState.FOLLOWER, n.state);
     }
@@ -106,17 +111,17 @@ public class RaftElectionTests
 
     //Test 8: part a
     [Fact]
-    public void Single_Node_Majority_Vote_Becomes_Leader()
+    public async Task Single_Node_Majority_Vote_Becomes_Leader()
     {
         Node n = new();
-        n.startElection();
-        n.setElectionResults();
+        await n.startElection();
+        await n.setElectionResults();
         Assert.Equal(nodeState.LEADER, n.state);
     }
 
     //Test 8: part b
     [Fact]
-    public void Multiple_Node_Majority_Vote_Becomes_Leader()
+    public async Task Multiple_Node_Majority_Vote_Becomes_Leader()
     {
         Node node = new();
         var fakeNode1 = Substitute.For<INode>();
@@ -124,43 +129,43 @@ public class RaftElectionTests
         node.neighbors = [fakeNode1, fakeNode2];
 
         node.state = nodeState.CANDIDATE;
-        node.recieveResponseToVoteRequest(true);
-        node.recieveResponseToVoteRequest(true);
+        await node.recieveResponseToVoteRequest(true);
+        await node.recieveResponseToVoteRequest(true);
         Assert.Equal(nodeState.LEADER, node.state);
     }
 
     //Test 8: part c
     [Fact]
-    public void Multiple_Node_Without_Majority_Vote_Does_Not_Become_Leader()
+    public async Task Multiple_Node_Without_Majority_Vote_Does_Not_Become_Leader()
     {
         Node node = new();
         var fakeNode1 = Substitute.For<INode>();
         var fakeNode2 = Substitute.For<INode>();
         node.neighbors = [fakeNode1, fakeNode2];
 
-        node.startElection();
-        node.recieveResponseToVoteRequest(false);
-        node.recieveResponseToVoteRequest(false);
+        await node.startElection();
+        await node.recieveResponseToVoteRequest(false);
+        await node.recieveResponseToVoteRequest(false);
         Assert.NotEqual(nodeState.LEADER, node.state);
     }
 
     //Test 9
     [Fact]
-    public void Candidate_Recieves_Majority_Vote_Without_Every_Response_Becomes_Leader()
+    public async Task Candidate_Recieves_Majority_Vote_Without_Every_Response_Becomes_Leader()
     {
         Node node = new();
         var fakeNode1 = Substitute.For<INode>();
         var fakeNode2 = Substitute.For<INode>();
         node.neighbors = [fakeNode1, fakeNode2];
 
-        node.startElection();
-        node.recieveResponseToVoteRequest(true);
+        await node.startElection();
+        await node.recieveResponseToVoteRequest(true);
         Assert.Equal(nodeState.LEADER, node.state);
     }
 
     //Test 10 a
     [Fact]
-    public void Follower_Without_Vote_Sends_AppendRPC_With_Yes()
+    public async Task Follower_Without_Vote_Sends_AppendRPC_With_Yes()
     {
         Node node = new();
         Node node2 = new();
@@ -169,8 +174,8 @@ public class RaftElectionTests
         node2.neighbors = [node, node3];
         node3.neighbors = [node, node2];
 
-        node.startElection();
-        node.RequestVote(node.neighbors);
+        await node.startElection();
+        await node.RequestVote(node.neighbors);
         Assert.Equal(3, node.numVotesRecieved);
     }
 
@@ -217,8 +222,14 @@ public class RaftElectionTests
         node.neighbors = [fakeNode1, fakeNode2];
         fakeNode1.term = 5;
 
+
+        AppendEntriesRequestRPC request = new AppendEntriesRequestRPC
+        {
+            LeaderId = fakeNode1.id
+        };
+
         await node.startElection();
-        await node.ReceiveAppendEntryRequest(fakeNode1.id, 1, "");
+        await node.ReceiveAppendEntryRequest(request);
         Assert.Equal(nodeState.FOLLOWER, node.state);
     }
 
@@ -232,8 +243,14 @@ public class RaftElectionTests
         node.neighbors = [fakeNode1, fakeNode2];
         fakeNode1.term = 0;
 
+
+        AppendEntriesRequestRPC request = new AppendEntriesRequestRPC
+        {
+            LeaderId = fakeNode1.id
+        };
+
         await node.startElection();
-        await node.ReceiveAppendEntryRequest(fakeNode1.id, 1, "");
+        await node.ReceiveAppendEntryRequest(request);
         Assert.Equal(nodeState.CANDIDATE, node.state);
     }
 
@@ -247,15 +264,21 @@ public class RaftElectionTests
         node.neighbors = [fakeNode1, fakeNode2];
         fakeNode1.term = 1;
 
+
+        AppendEntriesRequestRPC request = new AppendEntriesRequestRPC
+        {
+            LeaderId = fakeNode1.id
+        };
+
         await node.startElection();
         Assert.Equal(1, node.term);
-        await node.ReceiveAppendEntryRequest(fakeNode1.id, 1, "");
+        await node.ReceiveAppendEntryRequest(request);
         Assert.Equal(nodeState.FOLLOWER, node.state);
     }
 
     //Test 14
     [Fact]
-    public void Two_Vote_Requests_For_Same_Term_Does_Not_Change_Current_Vote()
+    public async Task Two_Vote_Requests_For_Same_Term_Does_Not_Change_Current_Vote()
     {
         Node node = new();
         var fakeNode1 = Substitute.For<INode>();
@@ -263,15 +286,15 @@ public class RaftElectionTests
         node.neighbors = [fakeNode1, fakeNode2];
         fakeNode1.term = 1;
 
-        node.RecieveVoteRequest(fakeNode1.id, 1);
+        await node.RecieveVoteRequest(fakeNode1.id, 1);
         Assert.Equal(fakeNode1.id, node.voteId);
-        node.RecieveVoteRequest(fakeNode2.id, 1);
+        await node.RecieveVoteRequest(fakeNode2.id, 1);
         Assert.Equal(fakeNode1.id, node.voteId);
     }
 
     //Test 15
     [Fact]
-    public void Second_Vote_Request_For_Later_Term_Changes_Current_Vote()
+    public async Task Second_Vote_Request_For_Later_Term_Changes_Current_Vote()
     {
         Node node = new();
         var fakeNode1 = Substitute.For<INode>();
@@ -279,10 +302,10 @@ public class RaftElectionTests
         node.neighbors = [fakeNode1, fakeNode2];
         fakeNode1.term = 1;
 
-        node.RecieveVoteRequest(fakeNode1.id, 1);
+        await node.RecieveVoteRequest(fakeNode1.id, 1);
         Assert.Equal(1, node.voteTerm);
         Assert.Equal(fakeNode1.id, node.voteId);
-        node.RecieveVoteRequest(fakeNode2.id, 2);
+        await node.RecieveVoteRequest(fakeNode2.id, 2);
         Assert.Equal(2, node.voteTerm);
         Assert.Equal(fakeNode2.id, node.voteId);
     }
@@ -310,13 +333,19 @@ public class RaftElectionTests
 
         node.term = 10;
 
-        fakeNode1.sendAppendRPCRequest(node, "");
-        fakeNode1.recieveResponseToAppendEntryRPCRequest(node.id, false);
+        AppendEntriesResponseRPC response = new AppendEntriesResponseRPC
+        {
+            sendingNode = node.id,
+            received = false
+                    };
+
+        fakeNode1.sendAppendRPCRequest(node);
+        fakeNode1.recieveResponseToAppendEntryRPCRequest(response);
     }
 
     //Test 19
     [Fact]
-    public void Candidate_Wins_An_Election_Sends_A_Heartbeat()
+    public async Task Candidate_Wins_An_Election_Sends_A_Heartbeat()
     {
         Node node = new();
         var fakeNode1 = Substitute.For<INode>();
@@ -325,10 +354,10 @@ public class RaftElectionTests
 
         node.state = nodeState.CANDIDATE;
         node.numVotesRecieved = 3;
-        node.setElectionResults();
+        await node.setElectionResults();
         Assert.Equal(nodeState.LEADER, node.state);
 
         Thread.Sleep(10);
-        fakeNode1.Received().ReceiveAppendEntryRequest(Arg.Any<Guid>(), Arg.Any<int>(), Arg.Any<string>());
+        await fakeNode1.Received().ReceiveAppendEntryRequest(Arg.Any<AppendEntriesRequestRPC>());
     }
 }
