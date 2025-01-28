@@ -27,10 +27,10 @@ public interface INode
     public Task RecieveVoteRequest(Guid candidateId, int candidateTerm);
     public Task recieveResponseToVoteRequest(bool voteResponse);
     public Task sendHeartbeatRPC(INode[] nodes);
-    public Task sendAppendRPCRequest(INode recievingNode, string message);
+    public Task sendAppendRPCRequest(INode recievingNode);
 
-    public Task ReceiveAppendEntryRequest(Guid leaderId, int commitIndex, string message);
-    public Task recieveResponseToAppendEntryRPCRequest(Guid sendingNode, bool received);
+    public Task ReceiveAppendEntryRequest(AppendEntriesRequestRPC rpc);
+    public Task recieveResponseToAppendEntryRPCRequest(AppendEntriesResponseRPC rpc);
     public void ResetTimer();
     public void Pause();
     public void Resume();

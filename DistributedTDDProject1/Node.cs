@@ -27,7 +27,7 @@ public class Node : INode
     public double networkDelay { get; set; }
     int heartbeatsSent = 0;
     public List<Log> logs { get; set; }
-    public Dictionary<int, string> stateMachine;
+    public Dictionary<string, string> stateMachine;
     public Dictionary<Guid, int> neighborNextIndexes;
     public Dictionary<int, int> LogToTimesReceived;
     public int nextIndex;
@@ -44,10 +44,10 @@ public class Node : INode
         timeoutMultiplier = 1;
         networkDelay = 0;
         prevIndex = 0;
-        nextIndex = 0;
+        nextIndex = 1;
         logs = new();
-        highestCommittedLogIndex = 0;
-        stateMachine = new Dictionary<int, string>();
+        highestCommittedLogIndex = -1;
+        stateMachine = new Dictionary<string, string>();
         neighborNextIndexes = new Dictionary<Guid, int>();
         LogToTimesReceived = new Dictionary<int, int>();
         electionTimeoutTimer = new System.Timers.Timer(timeoutInterval * timeoutMultiplier);
@@ -114,7 +114,7 @@ public class Node : INode
     {
         foreach (var node in neighbors)
         {
-            await sendAppendRPCRequest(node, "");
+            await sendAppendRPCRequest(node);
         }
 
         heartbeatTimer = new System.Timers.Timer(50);
@@ -133,19 +133,28 @@ public class Node : INode
     {
         foreach (var node in nodes)
         {
-            await sendAppendRPCRequest(node, "");
+            await sendAppendRPCRequest(node);
         }
     }
 
-    public async Task sendAppendRPCRequest(INode recievingNode, string message)
+    public async Task sendAppendRPCRequest(INode recievingNode)
     {
-        //follower runs this
-        await recievingNode.ReceiveAppendEntryRequest(id, highestCommittedLogIndex, message);
+        var rpc = new AppendEntriesRequestRPC
+        {
+            LeaderId = id,
+            Term = term,
+            PrevLogIndex = prevIndex,
+            PrevLogTerm = logs.Count > 0 ? logs[prevIndex].term : 0,
+            Entries = logs.Skip(prevIndex).ToList(),
+            leaderHighestLogCommitted = highestCommittedLogIndex
+        };
+
+        await recievingNode.ReceiveAppendEntryRequest(rpc);
     }
 
-    public async Task ReceiveAppendEntryRequest(Guid leaderId, int commitIndex, string message)
+    public async Task ReceiveAppendEntryRequest(AppendEntriesRequestRPC rpc)
     {
-        INode leaderNode = neighbors.FirstOrDefault((n) => n.id == leaderId);
+        INode leaderNode = neighbors.FirstOrDefault((n) => n.id == rpc.LeaderId);
         if (leaderNode == null)
         {
             throw new Exception("Leader Was Null");
@@ -156,41 +165,58 @@ public class Node : INode
             currentLeader = leaderNode.id;
             if (state != nodeState.FOLLOWER) { state = nodeState.FOLLOWER; }
 
-            //Log newLog = new Log
-            //{
-            //    term = term,
-            //    message = message
-            //};
+            foreach(Log entry in rpc.Entries)
+            { 
+                logs.Add(entry);
+            }
+            prevIndex = logs.Count - 1;
+            nextIndex = logs.Count;
 
-            //logs.Add(newLog);
-            //prevIndex = logs.Count - 1;
-            //nextIndex = logs.Count;
             ResetTimer();
-            await leaderNode.recieveResponseToAppendEntryRPCRequest(id, true);
+
+            AppendEntriesResponseRPC rpcResponse = new AppendEntriesResponseRPC
+            {
+                sendingNode = id,
+                received = true,
+                followerHighestReceivedIndex = highestCommittedLogIndex
+            };
+            await leaderNode.recieveResponseToAppendEntryRPCRequest(rpcResponse);
         }
         else if (leaderNode.term < term)
         {
-            await leaderNode.recieveResponseToAppendEntryRPCRequest(id, false);
+            AppendEntriesResponseRPC rpcResponse = new AppendEntriesResponseRPC
+            {
+                sendingNode = id,
+                received = false,
+                followerHighestReceivedIndex = highestCommittedLogIndex
+            };
+            await leaderNode.recieveResponseToAppendEntryRPCRequest(rpcResponse);
         }
     }
-    public async Task recieveResponseToAppendEntryRPCRequest(Guid sendingNode, bool received)
+
+    public async Task recieveResponseToAppendEntryRPCRequest(AppendEntriesResponseRPC rpc)
     {
-        // If the log entry is successfully received, handle the log updates (commented out here).
-        // if (received)
-        // {
-        //     if (!LogToTimesReceived.ContainsKey(prevIndex))
-        //     {
-        //         LogToTimesReceived[prevIndex] = 2;
-        //     }
-        //     else
-        //     {
-        //         LogToTimesReceived[prevIndex] += 1;
-        //     }
-        //     if (LogToTimesReceived[prevIndex] >= Math.Ceiling(((double)neighbors.Length + 1) / 2))
-        //     {
-        //         // Commit the log to state machine
-        //     }
-        // }
+        if(rpc.received == true)
+        {
+            if (LogToTimesReceived.ContainsKey(prevIndex))
+            {
+                LogToTimesReceived[prevIndex]++;
+            }
+            else
+            {
+                LogToTimesReceived[prevIndex] = 1;
+            }
+            if (LogToTimesReceived[prevIndex] >= Math.Ceiling(((double)neighbors.Length + 1) / 2) && (highestCommittedLogIndex < prevIndex) && prevIndex < logs.Count)
+            {
+                highestCommittedLogIndex = prevIndex;
+                var logEntry = logs[prevIndex];
+                stateMachine[logEntry.key] = logEntry.message;
+
+                prevIndex++;
+                nextIndex++;
+            }
+
+        }
     }
 
 
@@ -226,26 +252,14 @@ public class Node : INode
         electionTimeoutTimer.Start();
     }
 
-    public void recieveCommandFromClient(int key, string message)
+    public void recieveCommandFromClient(string key, string message)
     {
         Log newLog = new Log();
         newLog.key = key;
         newLog.term = term;
         newLog.message = message;
         logs.Add(newLog);
-        prevIndex = logs.Count - 1;
-        nextIndex = logs.Count;
     }
-
-    //public void commitLogToStateMachine(string message)
-    //{
-    //    var log = logs.FirstOrDefault(x => x.key == logIndex);
-    //    if (log != null)
-    //    {
-    //        stateMachine[highestCommittedLogIndex + 1] = log.message;
-    //        highestCommittedLogIndex = stateMachine.Count;
-    //    }
-    //}
 
     public void Pause()
     {
