@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "Ixsm7/RnMmU=",
+  "dgSpecHash": "oPKSsM9/4bc=",
   "success": true,
-  "projectFilePath": "C:\\Users\\bryce\\source\\repos\\DistributedTDDProject1\\DistributedTDDTests\\DistributedTDDTests.csproj",
+  "projectFilePath": "C:\\Users\\bryce\\source\\repos\\DistributedTDDProject1\\DistributedTDDTests\\DistributedTDDElectionTests.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\bryce\\.nuget\\packages\\castle.core\\5.1.1\\castle.core.5.1.1.nupkg.sha512",
     "C:\\Users\\bryce\\.nuget\\packages\\coverlet.collector\\6.0.0\\coverlet.collector.6.0.0.nupkg.sha512",

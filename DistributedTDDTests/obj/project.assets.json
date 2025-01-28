@@ -5738,9 +5738,9 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\bryce\\source\\repos\\DistributedTDDProject1\\DistributedTDDTests\\DistributedTDDTests.csproj",
-      "projectName": "DistributedTDDTests",
-      "projectPath": "C:\\Users\\bryce\\source\\repos\\DistributedTDDProject1\\DistributedTDDTests\\DistributedTDDTests.csproj",
+      "projectUniqueName": "C:\\Users\\bryce\\source\\repos\\DistributedTDDProject1\\DistributedTDDTests\\DistributedTDDElectionTests.csproj",
+      "projectName": "DistributedTDDElectionTests",
+      "projectPath": "C:\\Users\\bryce\\source\\repos\\DistributedTDDProject1\\DistributedTDDTests\\DistributedTDDElectionTests.csproj",
       "packagesPath": "C:\\Users\\bryce\\.nuget\\packages\\",
       "outputPath": "C:\\Users\\bryce\\source\\repos\\DistributedTDDProject1\\DistributedTDDTests\\obj\\",
       "projectStyle": "PackageReference",
