@@ -34,5 +34,5 @@ public interface INode
     public void ResetTimer();
     public void Pause();
     public void Resume();
-
+    public Task ReceiveClientResponse(ClientResponseArgs clientResponseArgs);
 }

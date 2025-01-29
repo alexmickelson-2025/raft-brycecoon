@@ -17,8 +17,9 @@ public class Node : INode
     public Guid voteId { get; set; }
     public int voteTerm { get; set; }
     public int term { get; set; }
-    public nodeState state { get; set; } //starts as the first option (follower)
+    public nodeState state { get; set; }
     public INode[] neighbors { get; set; }
+    public INode Client { get; set; }
     System.Timers.Timer electionTimeoutTimer { get; set; }
     System.Timers.Timer heartbeatTimer { get; set; }
     public long timeoutInterval { get; set; }
@@ -160,19 +161,35 @@ public class Node : INode
             throw new Exception("Leader Was Null");
         }
 
-        if (leaderNode.term >= term)
+        if (rpc.Term >= term)
         {
             currentLeader = leaderNode.id;
             if (state != nodeState.FOLLOWER) { state = nodeState.FOLLOWER; }
-
-            foreach(Log entry in rpc.Entries)
-            { 
-                logs.Add(entry);
-            }
-            prevIndex = logs.Count - 1;
-            nextIndex = logs.Count;
-
             ResetTimer();
+
+        }
+
+        if ((rpc.Term >= term) && rpc.PrevLogIndex == prevIndex)
+        {
+
+
+            if (logs.Count > 0 && rpc.PrevLogTerm == logs.Last().term && rpc.PrevLogIndex == prevIndex) //Means we received the same log as before
+            {
+                if (rpc.PrevLogTerm == logs.Last().term && rpc.PrevLogIndex == prevIndex)
+                {
+                    highestCommittedLogIndex = rpc.leaderHighestLogCommitted;
+                }
+            }
+            else
+            {
+                foreach (Log entry in rpc.Entries)
+                {
+                    logs.Add(entry);
+                    prevIndex = logs.Count - 1;
+                    nextIndex = logs.Count;
+                }
+            }
+
 
             AppendEntriesResponseRPC rpcResponse = new AppendEntriesResponseRPC
             {
@@ -182,7 +199,22 @@ public class Node : INode
             };
             await leaderNode.recieveResponseToAppendEntryRPCRequest(rpcResponse);
         }
-        else if (leaderNode.term < term)
+        else if ((rpc.Term >= term) && (rpc.PrevLogIndex < prevIndex + 1)) //valid leader, but index is less than ours
+        {
+            for (int i = 0; i < (prevIndex - rpc.PrevLogIndex); i++)
+            {
+                logs.Remove(logs.Last());
+            }
+            AppendEntriesResponseRPC rpcResponse = new AppendEntriesResponseRPC
+            {
+                sendingNode = id,
+                received = false,
+                followerHighestReceivedIndex = highestCommittedLogIndex
+            };
+            await leaderNode.recieveResponseToAppendEntryRPCRequest(rpcResponse);
+        }
+
+        else
         {
             AppendEntriesResponseRPC rpcResponse = new AppendEntriesResponseRPC
             {
@@ -196,7 +228,7 @@ public class Node : INode
 
     public async Task recieveResponseToAppendEntryRPCRequest(AppendEntriesResponseRPC rpc)
     {
-        if(rpc.received == true)
+        if (rpc.received == true)
         {
             if (LogToTimesReceived.ContainsKey(prevIndex))
             {
@@ -214,8 +246,18 @@ public class Node : INode
 
                 prevIndex++;
                 nextIndex++;
+
+
+                if (Client != null)
+                {
+                    await Client.ReceiveClientResponse(new ClientResponseArgs());
+                }
             }
 
+        }
+        else if (rpc.followerHighestReceivedIndex != neighborNextIndexes[rpc.sendingNode])
+        {
+            neighborNextIndexes[rpc.sendingNode]--;
         }
     }
 
@@ -271,5 +313,10 @@ public class Node : INode
     {
         heartbeatTimer.Start();
         electionTimeoutTimer.Start();
+    }
+
+    public async Task ReceiveClientResponse(ClientResponseArgs clientResponseArgs)
+    {
+
     }
 }

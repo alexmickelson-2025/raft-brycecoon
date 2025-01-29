@@ -28,4 +28,13 @@ public class AppendEntriesResponseRPC
     public Guid sendingNode { get; set; }
     public bool received {  get; set; }
     public int followerHighestReceivedIndex { get; set; }
+    public int term { get; set; }
+}
+
+
+
+
+public class ClientResponseArgs
+{
+
 }
