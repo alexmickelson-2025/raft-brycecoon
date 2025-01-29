@@ -21,3 +21,4 @@ Log Replication Tests:
 19 [X]  
 20 [X]
 
+new since last time are 7,11,12, and 14-20
