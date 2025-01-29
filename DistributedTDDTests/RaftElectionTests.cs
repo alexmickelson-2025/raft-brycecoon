@@ -221,11 +221,14 @@ public class RaftElectionTests
         var fakeNode2 = Substitute.For<INode>();
         node.neighbors = [fakeNode1, fakeNode2];
         fakeNode1.term = 5;
+        node.neighborNextIndexes[fakeNode1.id] = 0;
+
 
 
         AppendEntriesRequestRPC request = new AppendEntriesRequestRPC
         {
-            LeaderId = fakeNode1.id
+            LeaderId = fakeNode1.id,
+            Term = 10
         };
 
         await node.startElection();
@@ -263,11 +266,12 @@ public class RaftElectionTests
         var fakeNode2 = Substitute.For<INode>();
         node.neighbors = [fakeNode1, fakeNode2];
         fakeNode1.term = 1;
-
+        node.neighborNextIndexes[fakeNode1.id] = 1;
 
         AppendEntriesRequestRPC request = new AppendEntriesRequestRPC
         {
-            LeaderId = fakeNode1.id
+            LeaderId = fakeNode1.id,
+            Term = 10
         };
 
         await node.startElection();

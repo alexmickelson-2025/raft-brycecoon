@@ -15,7 +15,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("DistributedTDDElectionTests")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+ea5cc83096c320ab172ddd91d93ba5887d06bdd4")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+bdf2dfd75886fefbd485b3fec3fd77e4e14ddbd6")]
 [assembly: System.Reflection.AssemblyProductAttribute("DistributedTDDElectionTests")]
 [assembly: System.Reflection.AssemblyTitleAttribute("DistributedTDDElectionTests")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
