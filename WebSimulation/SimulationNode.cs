@@ -28,14 +28,19 @@ public class SimulationNode : INode
         InnerNode.Resume();
     }
 
-    public async Task ReceiveAppendEntryRequest(Guid leaderId, int commitIndex, string message)
+    public async Task ReceiveAppendEntryRequest(AppendEntriesRequestRPC rpc)
     {
-        await InnerNode.ReceiveAppendEntryRequest(leaderId, commitIndex, message);
+        await InnerNode.ReceiveAppendEntryRequest(rpc);
     }
 
-    public async Task recieveResponseToAppendEntryRPCRequest(Guid sendingNode, bool received)
+    public Task ReceiveClientResponse(ClientResponseArgs clientResponseArgs)
     {
-        await InnerNode.recieveResponseToAppendEntryRPCRequest((Guid)sendingNode, received);
+        throw new NotImplementedException();
+    }
+
+    public async Task recieveResponseToAppendEntryRPCRequest(AppendEntriesResponseRPC rpc)
+    {
+        await InnerNode.recieveResponseToAppendEntryRPCRequest(rpc);
     }
 
     public async Task recieveResponseToVoteRequest(bool voteResponse)
@@ -63,9 +68,9 @@ public class SimulationNode : INode
         InnerNode.Resume();
     }
 
-    public async Task sendAppendRPCRequest(INode recievingNode, string message)
+    public async Task sendAppendRPCRequest(INode recievingNode)
     {
-        await InnerNode.sendAppendRPCRequest(recievingNode, message);
+        await InnerNode.sendAppendRPCRequest(recievingNode);
     }
 
     public async Task sendHeartbeatRPC(INode[] nodes)
