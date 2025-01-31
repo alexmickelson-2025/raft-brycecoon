@@ -16,15 +16,12 @@ var logger = app.Services.GetService<ILogger<Program>>();
 Console.WriteLine($"Node ID {nodeId}" );
 Console.WriteLine($"Other nodes environment config: {otherNodesRaw}");
  
- 
 INode[] otherNodes = otherNodesRaw
   .Split(";")
   .Select(s => new HttpRpcOtherNode(Guid.Parse(s.Split(",")[0]), s.Split(",")[1]))
   .ToArray();
  
- 
 Console.WriteLine("other nodes {nodes}", JsonSerializer.Serialize(otherNodes));
- 
  
 var node = new Node()
 {
@@ -34,9 +31,7 @@ var node = new Node()
 node.neighbors = otherNodes;
  
 Node.NodeIntervalScalar = double.Parse(nodeIntervalScalarRaw);
- 
-app.MapGet("/health", () => "healthy");
- 
+  
 app.MapPost("/request/appendEntries", async (AppendEntriesRequestRPC request) =>
 {
   Console.WriteLine($"received append entries request {request}");
