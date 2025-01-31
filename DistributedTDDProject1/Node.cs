@@ -57,47 +57,50 @@ public class Node : INode
         electionTimeoutTimer.Start();
     }
 
-    public async Task RequestVote(INode[] nodes)
+    public Task RequestVoteFromEachNeighbor()
     {
-        foreach (var node in nodes)
+        foreach (var node in neighbors)
         {
-            await sendVoteRequest(node);
+            node.RequestVote(new VoteRequestRPC { candidateId = id, candidateTerm = term });
         }
+        return Task.CompletedTask;
     }
 
-    public async Task sendVoteRequest(INode recievingNode)
+    public Task RequestVote(VoteRequestRPC rpc)
     {
-        if (recievingNode.voteTerm < term)
+        var candidateNode = neighbors.FirstOrDefault((n) => n.id == rpc.candidateId);
+        if (candidateNode == null)
         {
-            await recievingNode.RecieveVoteRequest(id, term);
-        }
-    }
+            throw new Exception("Candidate Was Null");
+        };
 
-    public async Task RecieveVoteRequest(Guid candidateId, int candidateTerm)
-    {
-        var candidateNode = neighbors.FirstOrDefault((n) => n.id == candidateId);
-        if (candidateNode == null) return;
-
-        if (candidateTerm >= voteTerm)
+        if (rpc.candidateTerm > term)
         {
-            voteTerm = candidateTerm;
-            voteId = candidateId;
+            term = rpc.candidateTerm;
+            voteTerm = rpc.candidateTerm;
+            voteId = rpc.candidateId;
             state = nodeState.FOLLOWER;
-            await candidateNode.recieveResponseToVoteRequest(true);
+            candidateNode.ReceiveVoteResponse(new VoteResponseRPC { response = true });
         }
         else
         {
-            await candidateNode.recieveResponseToVoteRequest(false);
+            candidateNode.ReceiveVoteResponse(new VoteResponseRPC { response = false });
         }
+
+        return Task.CompletedTask;
     }
 
-    public async Task recieveResponseToVoteRequest(bool voteResponse)
+    public Task ReceiveVoteResponse(VoteResponseRPC rpc)
     {
-        if (voteResponse) { numVotesRecieved++; }
-        await setElectionResults();
+        if (rpc.response)
+        {
+            numVotesRecieved++;
+            setElectionResults();
+        }
+        return Task.CompletedTask;
     }
 
-    public async Task setElectionResults()
+    public void setElectionResults()
     {
         if (numVotesRecieved >= Math.Ceiling(((double)neighbors.Length + 1) / 2))
         {
@@ -106,55 +109,67 @@ public class Node : INode
                 state = nodeState.LEADER;
                 currentLeader = id;
                 foreach (var node in neighbors) { neighborNextIndexes[node.id] = nextIndex; }
-                await StartHeartbeat();
+                StartHeartbeat();
             }
         }
     }
 
-    public async Task StartHeartbeat()
+    public void StartHeartbeat()
     {
         foreach (var node in neighbors)
         {
-            await sendAppendRPCRequest(node);
+            sendAppendRPCRequest(node.id);
         }
 
         heartbeatTimer = new System.Timers.Timer(50);
-        heartbeatTimer.Elapsed += async (sender, e) => await leaderTimeout(sender, e);
+        heartbeatTimer.Elapsed += (sender, e) => leaderTimeout();
         heartbeatTimer.AutoReset = true;
         heartbeatTimer.Start();
     }
 
-    public async Task leaderTimeout(object sender, ElapsedEventArgs e)
+    public void leaderTimeout()
     {
-        await sendHeartbeatRPC(neighbors);
+        sendHeartbeatRPC(neighbors);
     }
 
 
-    public async Task sendHeartbeatRPC(INode[] nodes)
+    public void sendHeartbeatRPC(INode[] nodes)
     {
         foreach (var node in nodes)
         {
-            await sendAppendRPCRequest(node);
+            sendAppendRPCRequest(node.id);
         }
     }
 
-    public async Task sendAppendRPCRequest(INode recievingNode)
+    public void sendAppendRPCRequest(Guid ReceiverId)
     {
+        INode receivingNode = neighbors.FirstOrDefault((n) => n.id == ReceiverId);
+        if(receivingNode == null)
+        {
+            throw new Exception("Receiving Node was null");
+        }
+
+        int sendingLogIndex = neighborNextIndexes[ReceiverId];
+        int logTerm = (logs.Count > 0 && sendingLogIndex < logs.Count && sendingLogIndex >= 0) ? logs[sendingLogIndex].term : 0;
+        List<Log> entries = logs.Skip(sendingLogIndex).ToList();
+        Console.WriteLine($"Entries Count: {entries.Count}");
+
         var rpc = new AppendEntriesRequestRPC
         {
             LeaderId = id,
             Term = term,
-            PrevLogIndex = prevIndex,
-            PrevLogTerm = logs.Count > 0 ? logs[prevIndex].term : 0,
-            Entries = logs.Skip(prevIndex).ToList(),
+            PrevLogIndex = sendingLogIndex - 1,
+            PrevLogTerm = logTerm,
+            Entries = entries,
             leaderHighestLogCommitted = highestCommittedLogIndex
         };
 
-        await recievingNode.ReceiveAppendEntryRequest(rpc);
+        receivingNode.RequestAppendEntry(rpc);
     }
 
-    public async Task ReceiveAppendEntryRequest(AppendEntriesRequestRPC rpc)
+    public Task RequestAppendEntry(AppendEntriesRequestRPC rpc)
     {
+        
         INode leaderNode = neighbors.FirstOrDefault((n) => n.id == rpc.LeaderId);
         if (leaderNode == null)
         {
@@ -163,41 +178,25 @@ public class Node : INode
 
         if (rpc.Term >= term)
         {
-            currentLeader = leaderNode.id;
-            if (state != nodeState.FOLLOWER) { state = nodeState.FOLLOWER; }
+            UpdatePerceivedLeader(leaderNode);
             ResetTimer();
-
         }
 
-        if ((rpc.Term >= term) && rpc.PrevLogIndex == prevIndex)
+        if ((rpc.Term >= term) && rpc.PrevLogIndex <= prevIndex)
         {
-
-
-            if (logs.Count > 0 && rpc.PrevLogTerm == logs.Last().term && rpc.PrevLogIndex == prevIndex) //Means we received the same log as before
+            if (logs.Count > 0 && rpc.PrevLogTerm == logs.Last().term && rpc.PrevLogIndex == prevIndex)
             {
-                if (rpc.PrevLogTerm == logs.Last().term && rpc.PrevLogIndex == prevIndex)
+                if (rpc.PrevLogTerm == logs.Last().term && rpc.PrevLogIndex >= prevIndex)
                 {
                     highestCommittedLogIndex = rpc.leaderHighestLogCommitted;
                 }
             }
-            else
+            else if (rpc.Entries.Count > 0)
             {
-                foreach (Log entry in rpc.Entries)
-                {
-                    logs.Add(entry);
-                    prevIndex = logs.Count - 1;
-                    nextIndex = logs.Count;
-                }
+                AddReceivedLogsToPersonalLogs(rpc);
             }
 
-
-            AppendEntriesResponseRPC rpcResponse = new AppendEntriesResponseRPC
-            {
-                sendingNode = id,
-                received = true,
-                followerHighestReceivedIndex = highestCommittedLogIndex
-            };
-            await leaderNode.recieveResponseToAppendEntryRPCRequest(rpcResponse);
+            SendReceivedTrueToLeader(leaderNode);
         }
         else if ((rpc.Term >= term) && (rpc.PrevLogIndex < prevIndex + 1)) //valid leader, but index is less than ours
         {
@@ -205,31 +204,64 @@ public class Node : INode
             {
                 logs.Remove(logs.Last());
             }
-            AppendEntriesResponseRPC rpcResponse = new AppendEntriesResponseRPC
-            {
-                sendingNode = id,
-                received = false,
-                followerHighestReceivedIndex = highestCommittedLogIndex
-            };
-            await leaderNode.recieveResponseToAppendEntryRPCRequest(rpcResponse);
+            SendReceivedFalseToLeader(leaderNode);
         }
 
         else
         {
-            AppendEntriesResponseRPC rpcResponse = new AppendEntriesResponseRPC
-            {
-                sendingNode = id,
-                received = false,
-                followerHighestReceivedIndex = highestCommittedLogIndex
-            };
-            await leaderNode.recieveResponseToAppendEntryRPCRequest(rpcResponse);
+            SendReceivedFalseToLeader(leaderNode);
+            return Task.CompletedTask;
+        }
+        return Task.CompletedTask;
+
+    }
+
+    private Task SendReceivedFalseToLeader(INode leaderNode)
+    {
+        AppendEntriesResponseRPC rpcResponse = new AppendEntriesResponseRPC
+        {
+            sendingNode = id,
+            received = false,
+            followerHighestReceivedIndex = highestCommittedLogIndex
+        };
+        leaderNode.ReceiveAppendEntryRPCResponse(rpcResponse);
+        return Task.CompletedTask;
+
+    }
+
+    private Task SendReceivedTrueToLeader(INode leaderNode)
+    {
+        AppendEntriesResponseRPC rpcResponse = new AppendEntriesResponseRPC
+        {
+            sendingNode = id,
+            received = true,
+            followerHighestReceivedIndex = highestCommittedLogIndex
+        };
+        leaderNode.ReceiveAppendEntryRPCResponse(rpcResponse);
+        return Task.CompletedTask;
+    }
+
+    private void AddReceivedLogsToPersonalLogs(AppendEntriesRequestRPC rpc)
+    {
+        foreach (Log entry in rpc.Entries)
+        {
+            logs.Add(entry);
+            prevIndex = logs.Count - 1;
+            nextIndex = logs.Count;
         }
     }
 
-    public async Task recieveResponseToAppendEntryRPCRequest(AppendEntriesResponseRPC rpc)
+    private void UpdatePerceivedLeader(INode leaderNode)
+    {
+        currentLeader = leaderNode.id;
+        if (state != nodeState.FOLLOWER) { state = nodeState.FOLLOWER; }
+    }
+
+    public Task ReceiveAppendEntryRPCResponse(AppendEntriesResponseRPC rpc)
     {
         if (rpc.received == true)
         {
+            neighborNextIndexes[rpc.sendingNode] = rpc.followerHighestReceivedIndex + 1;
             if (LogToTimesReceived.ContainsKey(prevIndex))
             {
                 LogToTimesReceived[prevIndex]++;
@@ -238,20 +270,12 @@ public class Node : INode
             {
                 LogToTimesReceived[prevIndex] = 1;
             }
-            if (LogToTimesReceived[prevIndex] >= Math.Ceiling(((double)neighbors.Length + 1) / 2) && (highestCommittedLogIndex < prevIndex) && prevIndex < logs.Count)
+
+            if (LogToTimesReceived.ContainsKey(highestCommittedLogIndex + 1) &&
+                LogToTimesReceived[highestCommittedLogIndex + 1] >= Math.Ceiling(((double)neighbors.Length + 1) / 2) &&
+                highestCommittedLogIndex + 1 < logs.Count)
             {
-                highestCommittedLogIndex = prevIndex;
-                var logEntry = logs[prevIndex];
-                stateMachine[logEntry.key] = logEntry.message;
-
-                prevIndex++;
-                nextIndex++;
-
-
-                if (Client != null)
-                {
-                    await Client.ReceiveClientResponse(new ClientResponseArgs());
-                }
+                CommitNextLog();
             }
 
         }
@@ -259,10 +283,20 @@ public class Node : INode
         {
             neighborNextIndexes[rpc.sendingNode]--;
         }
+        return Task.CompletedTask;
     }
 
+    private void CommitNextLog()
+    {
+        highestCommittedLogIndex = prevIndex;
+        var logEntry = logs[prevIndex];
+        stateMachine[logEntry.key] = logEntry.message;
 
-    public async Task startElection()
+        prevIndex++;
+        nextIndex++;
+    }
+
+    public Task startElection()
     {
         if (state != nodeState.LEADER)
         {
@@ -271,15 +305,16 @@ public class Node : INode
             term++;
             state = nodeState.CANDIDATE;
 
-            await RequestVote(neighbors);
+            RequestVoteFromEachNeighbor();
         }
+        return Task.CompletedTask;
     }
 
-    public async void Timer_Timeout(object sender, ElapsedEventArgs e)
+    public void Timer_Timeout(object sender, ElapsedEventArgs e)
     {
         if (state != nodeState.LEADER)
         {
-            await startElection();
+            startElection();
             ResetTimer();
         }
     }
@@ -294,13 +329,22 @@ public class Node : INode
         electionTimeoutTimer.Start();
     }
 
-    public void recieveCommandFromClient(string key, string message)
+    public bool recieveCommandFromClient(string key, string message)
     {
-        Log newLog = new Log();
-        newLog.key = key;
-        newLog.term = term;
-        newLog.message = message;
-        logs.Add(newLog);
+        if (state == nodeState.LEADER)
+        {
+            Log newLog = new Log();
+            newLog.key = key;
+            newLog.term = term;
+            newLog.message = message;
+            logs.Add(newLog);
+
+            return true;
+        }
+        else
+        {
+            return false;
+        }
     }
 
     public void Pause()
@@ -315,8 +359,8 @@ public class Node : INode
         electionTimeoutTimer.Start();
     }
 
-    public async Task ReceiveClientResponse(ClientResponseArgs clientResponseArgs)
-    {
+    //public async Task ReceiveClientResponse(ClientResponseArgs clientResponseArgs)
+    //{
 
-    }
+    //}
 }

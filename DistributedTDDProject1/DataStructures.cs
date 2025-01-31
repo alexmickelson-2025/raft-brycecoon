@@ -31,10 +31,13 @@ public class AppendEntriesResponseRPC
     public int term { get; set; }
 }
 
-
-
-
-public class ClientResponseArgs
+public class VoteRequestRPC
 {
+    public Guid candidateId { get; set; }  
+    public int candidateTerm { get; set; }
+}
 
+public class VoteResponseRPC
+{
+    public bool response { get; set; }
 }
