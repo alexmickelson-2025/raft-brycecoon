@@ -1,6 +1,7 @@
 ﻿using Serilog;
 using System.Timers;
 using System.Xml.Linq;
+using System.Text.Json;
 
 namespace DistributedTDDProject1;
 
@@ -72,6 +73,9 @@ public class Node : INode
         var candidateNode = neighbors.FirstOrDefault((n) => n.id == rpc.candidateId);
         if (candidateNode == null)
         {
+            Console.WriteLine(rpc);
+            Console.WriteLine(JsonSerializer.Serialize(neighbors));
+
             throw new Exception("Candidate Was Null");
         };
 

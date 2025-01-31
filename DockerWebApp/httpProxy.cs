@@ -8,8 +8,8 @@ public class HttpRpcOtherNode : INode
  
   public HttpRpcOtherNode(Guid id, string url)
   {
-    Id = id;
-    Url = url;
+    this.id = id;
+    this.Url = url;
   }
  
   public async Task RequestAppendEntry(AppendEntriesRequestRPC request)
