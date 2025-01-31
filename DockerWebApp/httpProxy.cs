@@ -2,7 +2,7 @@ using DistributedTDDProject1;
 
 public class HttpRpcOtherNode : INode
 {
-  public Guid Id { get; set;}
+  public Guid id { get; set;}
   public string Url { get; }
   private HttpClient client = new();
  
