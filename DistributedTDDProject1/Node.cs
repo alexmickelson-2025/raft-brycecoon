@@ -32,7 +32,7 @@ public class Node : INode
     public Dictionary<Guid, int> neighborNextIndexes;
     public Dictionary<int, int> LogToTimesReceived;
     public int nextIndex;
-    public int prevIndex;
+    public int prevIndex { get => logs.Count -1; }
     public int highestCommittedLogIndex;
 
     public Node()
@@ -44,7 +44,6 @@ public class Node : INode
         neighbors = [];
         timeoutMultiplier = 1;
         networkDelay = 0;
-        prevIndex = 0;
         nextIndex = 1;
         logs = new();
         highestCommittedLogIndex = -1;
@@ -116,7 +115,7 @@ public class Node : INode
 
     public void StartHeartbeat()
     {
-        if(state !=nodeState.LEADER) { return; }
+        if (state != nodeState.LEADER) { return; }
         leaderTimeout();
 
         heartbeatTimer = new System.Timers.Timer(50);
@@ -148,7 +147,7 @@ public class Node : INode
         }
 
         int sendingLogIndex = neighborNextIndexes[ReceiverId];
-        int logTerm = (logs.Count > 0 && sendingLogIndex < logs.Count && sendingLogIndex >= 0) ? logs[sendingLogIndex].term : 0;
+        int logTerm = (logs.Count > sendingLogIndex && sendingLogIndex > 0) ? logs[sendingLogIndex].term : 0;
         List<Log> entries = logs.Skip(sendingLogIndex).ToList();
         Console.WriteLine($"Entries Count: {entries.Count}");
 
@@ -156,7 +155,7 @@ public class Node : INode
         {
             LeaderId = id,
             Term = term,
-            PrevLogIndex = sendingLogIndex - 1,
+            PrevLogIndex = sendingLogIndex,
             PrevLogTerm = logTerm,
             Entries = entries,
             leaderHighestLogCommitted = highestCommittedLogIndex
@@ -180,26 +179,33 @@ public class Node : INode
             ResetTimer();
         }
 
-        if ((rpc.Term >= term) && rpc.PrevLogIndex <= prevIndex)
+        if ((rpc.Term >= term) && rpc.PrevLogIndex == prevIndex)
         {
-            if (logs.Count > 0 && rpc.PrevLogTerm == logs.Last().term && rpc.PrevLogIndex == prevIndex)
+            if (rpc.leaderHighestLogCommitted >= rpc.PrevLogIndex && rpc.PrevLogIndex < logs.Count && logs.Count > 0)
             {
-                if (rpc.PrevLogTerm == logs.Last().term && rpc.PrevLogIndex >= prevIndex)
-                {
-                    highestCommittedLogIndex = rpc.leaderHighestLogCommitted;
-                }
+                stateMachine[logs[rpc.PrevLogIndex].key] = logs[rpc.PrevLogIndex].message;
+                highestCommittedLogIndex = rpc.PrevLogIndex;
             }
-            else if (rpc.Entries.Count > 0)
+
+            if (PreviousLogMatches(rpc))
+            {
+                AddReceivedLogsToPersonalLogs(rpc);
+            }
+            else if (logs.Count == 0) //index == 0 and term == 0
             {
                 AddReceivedLogsToPersonalLogs(rpc);
             }
 
             SendReceivedTrueToLeader(leaderNode);
         }
-        else if ((rpc.Term >= term) && (rpc.PrevLogIndex < prevIndex + 1)) //valid leader, but index is less than ours
+        else if (LeaderHasLowerPrevIndex(rpc)) //valid leader, but index is less than ours
         {
             for (int i = 0; i < (prevIndex - rpc.PrevLogIndex); i++)
             {
+                if (logs.Last() == null)
+                {
+                    throw new Exception("Tried to Remove a null object from logs");
+                }
                 logs.Remove(logs.Last());
             }
             SendReceivedFalseToLeader(leaderNode);
@@ -212,6 +218,16 @@ public class Node : INode
         }
         return Task.CompletedTask;
 
+    }
+
+    private bool LeaderHasLowerPrevIndex(AppendEntriesRequestRPC rpc)
+    {
+        return (rpc.Term >= term) && (rpc.PrevLogIndex < prevIndex + 1);
+    }
+
+    private bool PreviousLogMatches(AppendEntriesRequestRPC rpc)
+    {
+        return logs.Count > 0 && rpc.PrevLogTerm == logs.Last().term && rpc.PrevLogIndex == prevIndex;
     }
 
     private Task SendReceivedFalseToLeader(INode leaderNode)
@@ -244,7 +260,6 @@ public class Node : INode
         foreach (Log entry in rpc.Entries)
         {
             logs.Add(entry);
-            prevIndex = logs.Count - 1;
             nextIndex = logs.Count;
         }
     }
@@ -290,7 +305,6 @@ public class Node : INode
         var logEntry = logs[prevIndex];
         stateMachine[logEntry.key] = logEntry.message;
 
-        prevIndex++;
         nextIndex++;
     }
 
