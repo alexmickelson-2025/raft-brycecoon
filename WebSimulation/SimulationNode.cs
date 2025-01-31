@@ -14,7 +14,6 @@ public class SimulationNode : INode
 
     public Guid id { get => InnerNode.id; set => InnerNode.id = value; }
     public Guid voteId { get => InnerNode.voteId; set => InnerNode.voteId = value; }
-    public int voteTerm { get => InnerNode.voteTerm; set => InnerNode.voteTerm = value; }
     public int term { get => InnerNode.term; set => InnerNode.term = value; }
     public int timeoutMultiplier { get => InnerNode.timeoutMultiplier; set => InnerNode.timeoutMultiplier = value; }
     public double networkDelay { get => InnerNode.networkDelay; set => InnerNode.networkDelay = value; }
@@ -22,40 +21,33 @@ public class SimulationNode : INode
     public nodeState state { get => InnerNode.state; set => InnerNode.state = value; }
     public Guid currentLeader { get => InnerNode.currentLeader; set => InnerNode.currentLeader = value; }
     public List<Log> logs { get => InnerNode.logs; set => InnerNode.logs = value; }
+    public Dictionary<string,string> stateMachine { get => InnerNode.stateMachine; set => InnerNode.stateMachine = value; }
+    public int highestCommittedLogIndex { get => InnerNode.highestCommittedLogIndex; set => InnerNode.highestCommittedLogIndex = value; }
+    public int prevIndex { get => InnerNode.prevIndex; }
 
     public void Pause()
     {
         InnerNode.Resume();
     }
 
-    public async Task ReceiveAppendEntryRequest(AppendEntriesRequestRPC rpc)
+    public async Task RequestAppendEntry(AppendEntriesRequestRPC rpc)
     {
-        await InnerNode.ReceiveAppendEntryRequest(rpc);
+        await InnerNode.RequestAppendEntry(rpc);
     }
 
-    public Task ReceiveClientResponse(ClientResponseArgs clientResponseArgs)
+    public async Task ReceiveAppendEntryRPCResponse(AppendEntriesResponseRPC rpc)
     {
-        throw new NotImplementedException();
+        await InnerNode.ReceiveAppendEntryRPCResponse(rpc);
     }
 
-    public async Task recieveResponseToAppendEntryRPCRequest(AppendEntriesResponseRPC rpc)
+    public async Task ReceiveVoteResponse(VoteResponseRPC rpc)
     {
-        await InnerNode.recieveResponseToAppendEntryRPCRequest(rpc);
+        await InnerNode.ReceiveVoteResponse(rpc);
     }
 
-    public async Task recieveResponseToVoteRequest(bool voteResponse)
+    public async Task RequestVote(VoteRequestRPC rpc)
     {
-        await InnerNode.recieveResponseToVoteRequest(voteResponse);
-    }
-
-    public async Task RecieveVoteRequest(Guid candidateId, int candidateTerm)
-    {
-        await InnerNode.RecieveVoteRequest((Guid)candidateId, candidateTerm);
-    }
-
-    public async Task RequestVote(INode[] nodes)
-    {
-        await InnerNode.RequestVote(nodes);
+        await InnerNode.RequestVote(rpc);
     }
 
     public void ResetTimer()
@@ -68,18 +60,24 @@ public class SimulationNode : INode
         InnerNode.Resume();
     }
 
-    public async Task sendAppendRPCRequest(INode recievingNode)
+    //public async Task sendAppendRPCRequest(INode recievingNode)
+    //{
+    //    await InnerNode.sendAppendRPCRequest(recievingNode.id);
+    //}
+
+    //public async Task sendHeartbeatRPC(INode[] nodes)
+    //{
+    //    await InnerNode.sendHeartbeatRPC(nodes);
+    //}
+
+
+    public Task sendVoteRequest(Guid id, int term)
     {
-        await InnerNode.sendAppendRPCRequest(recievingNode);
+        return ((INode)InnerNode).RequestVote(new VoteRequestRPC { candidateId = id, candidateTerm = term });
     }
 
-    public async Task sendHeartbeatRPC(INode[] nodes)
+    public bool receiveCommandFromClient(string key, string value)
     {
-        await InnerNode.sendHeartbeatRPC(nodes);
-    }
-
-    public async Task sendVoteRequest(INode recievingNode)
-    {
-        await InnerNode.sendVoteRequest(recievingNode);
+        return InnerNode.recieveCommandFromClient(key, value);
     }
 }

@@ -41,3 +41,9 @@ public class VoteResponseRPC
 {
     public bool response { get; set; }
 }
+
+public class clientData
+{
+    public string key { get; set; }
+    public string message { get; set; }
+}

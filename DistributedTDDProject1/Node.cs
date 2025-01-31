@@ -1,4 +1,5 @@
-﻿using System.Timers;
+﻿using Serilog;
+using System.Timers;
 using System.Xml.Linq;
 
 namespace DistributedTDDProject1;
@@ -34,6 +35,7 @@ public class Node : INode
     public int nextIndex;
     public int prevIndex { get => logs.Count -1; }
     public int highestCommittedLogIndex;
+    public static double NodeIntervalScalar;
 
     public Node()
     {
@@ -181,6 +183,7 @@ public class Node : INode
 
         if ((rpc.Term >= term) && rpc.PrevLogIndex == prevIndex)
         {
+            //put this after adding logs later
             if (rpc.leaderHighestLogCommitted >= rpc.PrevLogIndex && rpc.PrevLogIndex < logs.Count && logs.Count > 0)
             {
                 stateMachine[logs[rpc.PrevLogIndex].key] = logs[rpc.PrevLogIndex].message;
@@ -249,7 +252,7 @@ public class Node : INode
         {
             sendingNode = id,
             received = true,
-            followerHighestReceivedIndex = highestCommittedLogIndex
+            followerHighestReceivedIndex = logs.Count //most recent change
         };
         leaderNode.ReceiveAppendEntryRPCResponse(rpcResponse);
         return Task.CompletedTask;
@@ -260,7 +263,6 @@ public class Node : INode
         foreach (Log entry in rpc.Entries)
         {
             logs.Add(entry);
-            nextIndex = logs.Count;
         }
     }
 
@@ -341,14 +343,14 @@ public class Node : INode
         electionTimeoutTimer.Start();
     }
 
-    public bool recieveCommandFromClient(string key, string message)
+    public async Task<bool> recieveCommandFromClient(clientData data)
     {
         if (state == nodeState.LEADER)
         {
             Log newLog = new Log();
-            newLog.key = key;
+            newLog.key = data.key;
             newLog.term = term;
-            newLog.message = message;
+            newLog.message = data.message;
             logs.Add(newLog);
 
             return true;

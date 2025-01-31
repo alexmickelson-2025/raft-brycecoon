@@ -12,34 +12,73 @@
     </div>
 
     <div class="row">
+        <div class="mb-4">
+            <h2>Set</h2>
+            <label>Node:</label>
+            <select @bind="selectedNodeId">
+                <option>SELECT A NODE</option>
+                @foreach(var node in nodes)
+                {
+                    <option value="@node.id">@node.id</option>
+                }
+            </select>
+            <label for="keyInput">Key:</label>
+            <input type="text" id="keyInput" @bind=keyInput/>
+            <label for="valueInput">Value:</label>
+            <input type="text" id="valueInput" @bind=valueInput/>
+            <button @onclick="SendLogToLeader">send</button>
+            <p>Response To Request: @setCommmandReceived</p>
+
+        </div>
         @foreach (var node in nodes)
         {
-                <div class="col-12 col-md-4 mb-4">
-                    <div class="card shadow-sm">
-                        <div class="card-body">
-                            <h5 class="card-title">Node: @node.id</h5>
-                            <p><strong>State:</strong> @node.state</p>
-                            <p><strong>Term:</strong> @node.term</p>
-                            <p><strong>Perceived Current Leader:</strong> @node.currentLeader</p>
-                            <p><strong>Timeout:</strong> @(node.timeoutInterval * timeoutMultiplier)</p>
+            <div class="col-12 col-md-4 mb-4">
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <h5 class="card-title">Node: @node.id</h5>
+                        <p><strong>State:</strong> @node.state</p>
+                        <p><strong>Term:</strong> @node.term</p>
+                        <p><strong>Perceived Current Leader:</strong> @node.currentLeader</p>
+                        <p><strong>Timeout:</strong> @(node.timeoutInterval * timeoutMultiplier)</p>
 
-                            <!-- Progress Bar -->
-                            <div class="progress" role="progressbar" aria-label="Timeout Progress"
-                                 aria-valuenow="@node.timeoutInterval"
-                                 aria-valuemin="0" aria-valuemax="@(300 * timeoutMultiplier)">
-                                <div class="progress-bar bg-success"
-                                     style="width: @(((node.timeoutInterval)/(double)(300)) * 100)%"></div>
-                            </div>
+                        <!-- Progress Bar -->
+                        <div class="progress" role="progressbar" aria-label="Timeout Progress"
+                             aria-valuenow="@node.timeoutInterval"
+                             aria-valuemin="0" aria-valuemax="@(300 * timeoutMultiplier)">
+                            <div class="progress-bar bg-success"
+                                 style="width: @(((node.timeoutInterval)/(double)(300)) * 100)%"></div>
+                        </div>
 
-        <button @onClick="() => PauseNode(node.id)">
-           Stop Node
-        </button>
+                        <button @onClick="() => PauseNode(node.id)">
+                            Stop Node
+                        </button>
+
+                        <p>Commit Index: @node.highestCommittedLogIndex</p>
+                        <p>prevIndex: @node.prevIndex</p>
+                        <h2>Journal Entries</h2>
+                        <div>
+                            @foreach (var (log, index) in node.logs.Select((log, index) => (log, index)))
+                            {
+                                <p>
+                                    Index: @index | Key: @log.key | Term Id: @log.term | Committed?:
+                                    @(node.stateMachine.ContainsKey(log.key) ? "Yes" : "No")
+                                </p>
+                            }
+                        </div>
+
+                        <h2>State Machine</h2>
+                        <div>
+                            @foreach (var state in node.stateMachine)
+                            {
+                                <p>Key: @state.Key Value: @state.Value</p>
+                            }
                         </div>
                     </div>
-                    <div>
-                        Network Delay: @node.networkDelay
-                    </div>
                 </div>
+                <div>
+                    Network Delay: @node.networkDelay
+                </div>
+            </div>
         }
     </div>
 
@@ -66,6 +105,11 @@
     private Timer timer;
     private double networkDelay = 0;
     private int timeoutMultiplier = 1;
+    private string keyInput;
+    private string valueInput;
+    private Guid selectedNodeId;
+    public bool setCommmandReceived = false;
+
 
     void changeElectionTimoutMultiplier(ChangeEventArgs e)
     {
@@ -113,5 +157,16 @@
     {
         var node = nodes.FirstOrDefault((n) => n.id == nodeToPauseId);
         node.Pause();
+    }
+
+    void SendLogToLeader()
+    {
+        SimulationNode receivingNode = nodes.FirstOrDefault((n) => n.id == selectedNodeId);
+        if(receivingNode == null)
+        {
+            throw new Exception("receiving Node was Null");
+        }
+
+        setCommmandReceived = receivingNode.receiveCommandFromClient(keyInput, valueInput);
     }
 }

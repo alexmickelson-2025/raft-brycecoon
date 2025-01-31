@@ -1,16 +1,20 @@
+using DistributedTDDProject1;
+
 public class HttpRpcOtherNode : INode
 {
-  public int Id { get; }
+  public Guid Id { get; }
   public string Url { get; }
-  private HttpClient client = new();
+    public Guid id { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+
+    private HttpClient client = new();
  
-  public HttpRpcOtherNode(int id, string url)
+  public HttpRpcOtherNode(Guid id, string url)
   {
     Id = id;
     Url = url;
   }
  
-  public async Task RequestAppendEntries(AppendEntriesData request)
+  public async Task RequestAppendEntry(AppendEntriesRequestRPC request)
   {
     try
     {
@@ -22,7 +26,7 @@ public class HttpRpcOtherNode : INode
     }
   }
  
-  public async Task RequestVote(VoteRequestData request)
+  public async Task RequestVote(VoteRequestRPC request)
   {
     try
     {
@@ -34,7 +38,7 @@ public class HttpRpcOtherNode : INode
     }
   }
  
-  public async Task RespondAppendEntries(RespondEntriesData response)
+  public async Task ReceiveAppendEntryRPCResponse(AppendEntriesResponseRPC response)
   {
     try
     {
@@ -46,7 +50,7 @@ public class HttpRpcOtherNode : INode
     }
   }
  
-  public async Task ResponseVote(VoteResponseData response)
+  public async Task ReceiveVoteResponse(VoteResponseRPC response)
   {
     try
     {
@@ -58,7 +62,7 @@ public class HttpRpcOtherNode : INode
     }
   }
  
-  public async Task SendCommand(ClientCommandData data)
+  public async Task SendCommand(clientData data)
   {
     await client.PostAsJsonAsync(Url + "/request/command", data);
   }

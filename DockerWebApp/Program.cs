@@ -1,8 +1,9 @@
 using System.Text.Json;
+using DistributedTDDProject1;
 using OpenTelemetry.Logs;
 using OpenTelemetry.Resources;
-using RaftLogic;
  
+
 var builder = WebApplication.CreateBuilder(args);
 builder.WebHost.UseUrls("http://0.0.0.0:8080");
  
@@ -11,91 +12,60 @@ var nodeId = Environment.GetEnvironmentVariable("NODE_ID") ?? throw new Exceptio
 var otherNodesRaw = Environment.GetEnvironmentVariable("OTHER_NODES") ?? throw new Exception("OTHER_NODES environment variable not set");
 var nodeIntervalScalarRaw = Environment.GetEnvironmentVariable("NODE_INTERVAL_SCALAR") ?? throw new Exception("NODE_INTERVAL_SCALAR environment variable not set");
  
-builder.Services.AddLogging();
-var serviceName = "Node" + nodeId;
-builder.Logging.AddOpenTelemetry(options =>
-{
-  options
-    .SetResourceBuilder(
-        ResourceBuilder
-          .CreateDefault()
-          .AddService(serviceName)
-    )
-    .AddOtlpExporter(options =>
-    {
-      options.Endpoint = new Uri("http://dashboard:18889");
-    });
-});
 var app = builder.Build();
  
 var logger = app.Services.GetService<ILogger<Program>>();
-logger.LogInformation("Node ID {name}", nodeId);
-logger.LogInformation("Other nodes environment config: {}", otherNodesRaw);
+Console.WriteLine("Node ID {name}", nodeId);
+Console.WriteLine("Other nodes environment config: {}", otherNodesRaw);
  
  
 INode[] otherNodes = otherNodesRaw
   .Split(";")
-  .Select(s => new HttpRpcOtherNode(int.Parse(s.Split(",")[0]), s.Split(",")[1]))
+  .Select(s => new HttpRpcOtherNode(Guid.Parse(s.Split(",")[0]), s.Split(",")[1]))
   .ToArray();
  
  
-logger.LogInformation("other nodes {nodes}", JsonSerializer.Serialize(otherNodes));
+Console.WriteLine("other nodes {nodes}", JsonSerializer.Serialize(otherNodes));
  
  
-var node = new RaftNode(otherNodes)
+var node = new Node()
 {
-  Id = int.Parse(nodeId),
-  logger = app.Services.GetService<ILogger<RaftNode>>()
+  id = Guid.Parse(nodeId),
 };
+
+node.neighbors = otherNodes;
  
-RaftNode.NodeIntervalScalar = double.Parse(nodeIntervalScalarRaw);
- 
-node.RunElectionLoop();
+Node.NodeIntervalScalar = double.Parse(nodeIntervalScalarRaw);
  
 app.MapGet("/health", () => "healthy");
  
-app.MapGet("/nodeData", () =>
+app.MapPost("/request/appendEntries", async (AppendEntriesRequestRPC request) =>
 {
-  return new NodeData(
-    Id: node.Id,
-    Status: node.Status,
-    ElectionTimeout: node.ElectionTimeout,
-    Term: node.CurrentTerm,
-    CurrentTermLeader: node.CurrentTermLeader,
-    CommittedEntryIndex: node.CommittedEntryIndex,
-    Log: node.Log,
-    State: node.State,
-    NodeIntervalScalar: RaftNode.NodeIntervalScalar
-  );
+  Console.WriteLine("received append entries request {request}", request);
+  await node.RequestAppendEntry(request);
 });
  
-app.MapPost("/request/appendEntries", async (AppendEntriesData request) =>
+app.MapPost("/request/vote", async (VoteRequestRPC request) =>
 {
-  logger.LogInformation("received append entries request {request}", request);
-  await node.RequestAppendEntries(request);
-});
- 
-app.MapPost("/request/vote", async (VoteRequestData request) =>
-{
-  logger.LogInformation("received vote request {request}", request);
+  Console.WriteLine("received vote request {request}", request);
   await node.RequestVote(request);
 });
  
-app.MapPost("/response/appendEntries", async (RespondEntriesData response) =>
+app.MapPost("/response/appendEntries", async (AppendEntriesResponseRPC response) =>
 {
-  logger.LogInformation("received append entries response {response}", response);
-  await node.RespondAppendEntries(response);
+  Console.WriteLine("received append entries response {response}", response);
+  await node.ReceiveAppendEntryRPCResponse(response);
 });
  
-app.MapPost("/response/vote", async (VoteResponseData response) =>
+app.MapPost("/response/vote", async (VoteResponseRPC response) =>
 {
-  logger.LogInformation("received vote response {response}", response);
-  await node.ResponseVote(response);
+  Console.WriteLine("received vote response {response}", response);
+  await node.ReceiveVoteResponse(response);
 });
  
-app.MapPost("/request/command", async (ClientCommandData data) =>
+app.MapPost("/request/command", async (clientData data) =>
 {
-  await node.SendCommand(data);
+  await node.recieveCommandFromClient(data);
 });
  
 app.Run();
