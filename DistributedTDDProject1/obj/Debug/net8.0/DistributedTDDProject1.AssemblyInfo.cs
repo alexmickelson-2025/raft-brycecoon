@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("DistributedTDDProject1")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+ecf48751b656d29e6f2b6764f7469e1873f0f34c")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+91575368b388cd6986ed05e7733b6daa28377a29")]
 [assembly: System.Reflection.AssemblyProductAttribute("DistributedTDDProject1")]
 [assembly: System.Reflection.AssemblyTitleAttribute("DistributedTDDProject1")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

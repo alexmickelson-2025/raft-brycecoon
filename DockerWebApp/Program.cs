@@ -13,7 +13,7 @@ var nodeIntervalScalarRaw = Environment.GetEnvironmentVariable("NODE_INTERVAL_SC
 var app = builder.Build();
  
 var logger = app.Services.GetService<ILogger<Program>>();
-Console.WriteLine("Node ID {name}", nodeId);
+Console.WriteLine($"Node ID {nodeId}" );
 Console.WriteLine("Other nodes environment config: {}", otherNodesRaw);
  
  
