@@ -14,7 +14,7 @@ var app = builder.Build();
  
 var logger = app.Services.GetService<ILogger<Program>>();
 Console.WriteLine($"Node ID {nodeId}" );
-Console.WriteLine("Other nodes environment config: {}", otherNodesRaw);
+Console.WriteLine($"Other nodes environment config: {otherNodesRaw}");
  
  
 INode[] otherNodes = otherNodesRaw
@@ -39,25 +39,25 @@ app.MapGet("/health", () => "healthy");
  
 app.MapPost("/request/appendEntries", async (AppendEntriesRequestRPC request) =>
 {
-  Console.WriteLine("received append entries request {request}", request);
+  Console.WriteLine($"received append entries request {request}");
   await node.RequestAppendEntry(request);
 });
  
 app.MapPost("/request/vote", async (VoteRequestRPC request) =>
 {
-  Console.WriteLine("received vote request {request}", request);
+  Console.WriteLine($"received vote request {request}");
   await node.RequestVote(request);
 });
  
 app.MapPost("/response/appendEntries", async (AppendEntriesResponseRPC response) =>
 {
-  Console.WriteLine("received append entries response {response}", response);
+  Console.WriteLine($"received append entries response {response}");
   await node.ReceiveAppendEntryRPCResponse(response);
 });
  
 app.MapPost("/response/vote", async (VoteResponseRPC response) =>
 {
-  Console.WriteLine("received vote response {response}", response);
+  Console.WriteLine($"received vote response {response}");
   await node.ReceiveVoteResponse(response);
 });
  
