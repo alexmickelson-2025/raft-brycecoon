@@ -116,14 +116,12 @@ public class Node : INode
 
     public void StartHeartbeat()
     {
-        foreach (var node in neighbors)
-        {
-            sendAppendRPCRequest(node.id);
-        }
+        if(state !=nodeState.LEADER) { return; }
+        leaderTimeout();
 
         heartbeatTimer = new System.Timers.Timer(50);
-        heartbeatTimer.Elapsed += (sender, e) => leaderTimeout();
-        heartbeatTimer.AutoReset = true;
+        heartbeatTimer.Elapsed += (sender, e) => StartHeartbeat();
+        heartbeatTimer.AutoReset = false;
         heartbeatTimer.Start();
     }
 
@@ -144,7 +142,7 @@ public class Node : INode
     public void sendAppendRPCRequest(Guid ReceiverId)
     {
         INode receivingNode = neighbors.FirstOrDefault((n) => n.id == ReceiverId);
-        if(receivingNode == null)
+        if (receivingNode == null)
         {
             throw new Exception("Receiving Node was null");
         }
@@ -169,7 +167,7 @@ public class Node : INode
 
     public Task RequestAppendEntry(AppendEntriesRequestRPC rpc)
     {
-        
+
         INode leaderNode = neighbors.FirstOrDefault((n) => n.id == rpc.LeaderId);
         if (leaderNode == null)
         {
