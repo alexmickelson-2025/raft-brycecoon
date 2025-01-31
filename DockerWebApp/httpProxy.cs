@@ -4,7 +4,6 @@ public class HttpRpcOtherNode : INode
 {
   public Guid Id { get; }
   public string Url { get; }
-    public Guid id { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
 
     private HttpClient client = new();
  
