@@ -21,7 +21,7 @@ public class LogReplicationTests
         var fakeNode2 = Substitute.For<INode>();
 
         n.neighbors = [fakeNode1, fakeNode2];
-        n.recieveCommandFromClient("wow", "testingLog");
+        n.recieveCommandFromClient(new clientData{ key = "wow", message = "testingLog" });
           n.StartHeartbeat();
 
         Thread.Sleep(100);
@@ -40,7 +40,7 @@ public class LogReplicationTests
     public void Leader_Recieves_Command_From_Client_Gets_Appended_To_Log()
     {
         var node = new Node();
-        node.recieveCommandFromClient("asdf", "testLog");
+        node.recieveCommandFromClient(new clientData { key = "asdf", message = "testingLog" });
         Assert.Equal("testLog", node.logs[0].message);
     }
 
@@ -88,8 +88,8 @@ public class LogReplicationTests
             followerHighestReceivedIndex = 2
         };
 
-        node.recieveCommandFromClient("asdf", "testLog");
-        node.recieveCommandFromClient("asdf", "testLog");
+        node.recieveCommandFromClient(new clientData { key = "asdf", message = "testingLog" });
+        node.recieveCommandFromClient(new clientData { key = "asdf", message = "testingLog" });
         node.highestCommittedLogIndex = 1;
           node.ReceiveAppendEntryRPCResponse(rpcResponse);
 
@@ -116,7 +116,7 @@ public class LogReplicationTests
         n.numVotesRecieved = 3;
           n.setElectionResults();
 
-        n.recieveCommandFromClient("wow", "testingLog");
+        n.recieveCommandFromClient(new clientData { key = "wow", message = "testingLog" });
         n.highestCommittedLogIndex = 0;
         n.term = 2;
         n.highestCommittedLogIndex = 10;
@@ -172,7 +172,7 @@ public class LogReplicationTests
         var fakeNode2 = Substitute.For<INode>();
         n.neighbors = [fakeNode1, fakeNode2];
 
-        n.recieveCommandFromClient("wow", "testLog");
+        n.recieveCommandFromClient(new clientData { key = "wow", message = "testingLog" });
         Assert.Equal(-1, n.highestCommittedLogIndex);
         Assert.Equal(0, n.prevIndex);
         Assert.Equal("testLog", n.logs[0].message);
@@ -206,7 +206,7 @@ public class LogReplicationTests
         var fakeNode2 = Substitute.For<INode>();
         n.neighbors = [fakeNode1, fakeNode2];
 
-        n.recieveCommandFromClient("wow", "testLog");
+        n.recieveCommandFromClient(new clientData { key = "wow", message = "testingLog" });
 
         AppendEntriesResponseRPC response = new AppendEntriesResponseRPC
         {
@@ -300,7 +300,7 @@ public class LogReplicationTests
         var fakeNode2 = Substitute.For<INode>();
         n.neighbors = [fakeNode1, fakeNode2];
 
-        n.recieveCommandFromClient("wow", "testLog");
+        n.recieveCommandFromClient(new clientData { key = "wow", message = "testingLog" });
 
         AppendEntriesResponseRPC response = new AppendEntriesResponseRPC
         {
@@ -467,7 +467,7 @@ public class LogReplicationTests
         var fakeNode2 = Substitute.For<INode>();
         n.neighbors = [fakeNode1, fakeNode2];
 
-        n.recieveCommandFromClient("wow", "testLog");
+        n.recieveCommandFromClient(new clientData { key = "wow", message = "testingLog" });
         Assert.Equal(-1, n.highestCommittedLogIndex);
         Assert.Equal(0, n.prevIndex);
         Assert.Equal("testLog", n.logs[0].message);

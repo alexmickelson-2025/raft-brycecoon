@@ -159,14 +159,15 @@
         node.Pause();
     }
 
-    void SendLogToLeader()
+    async void SendLogToLeader()
     {
-        SimulationNode receivingNode = nodes.FirstOrDefault((n) => n.id == selectedNodeId);
-        if(receivingNode == null)
+        SimulationNode receivingNode = nodes.FirstOrDefault(n => n.id == selectedNodeId);
+        if (receivingNode == null)
         {
             throw new Exception("receiving Node was Null");
         }
 
-        setCommmandReceived = receivingNode.receiveCommandFromClient(keyInput, valueInput);
+        // Await the task directly without using .Result
+        setCommmandReceived = await receivingNode.receiveCommandFromClient(keyInput, valueInput);
     }
 }

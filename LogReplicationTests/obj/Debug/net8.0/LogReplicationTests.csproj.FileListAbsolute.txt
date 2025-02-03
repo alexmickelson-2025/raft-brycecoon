@@ -107,3 +107,4 @@ C:\Users\bryce\source\repos\DistributedTDDProject1\LogReplicationTests\obj\Debug
 C:\Users\bryce\source\repos\DistributedTDDProject1\LogReplicationTests\obj\Debug\net8.0\LogReplicationTests.pdb
 C:\Users\bryce\source\repos\DistributedTDDProject1\LogReplicationTests\obj\Debug\net8.0\LogReplicationTests.genruntimeconfig.cache
 C:\Users\bryce\source\repos\DistributedTDDProject1\LogReplicationTests\obj\Debug\net8.0\ref\LogReplicationTests.dll
+C:\Users\bryce\source\repos\DistributedTDDProject1\LogReplicationTests\bin\Debug\net8.0\Serilog.dll

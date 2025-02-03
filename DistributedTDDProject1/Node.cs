@@ -148,6 +148,15 @@ public class Node : INode
             throw new Exception("Receiving Node was null");
         }
 
+        //if(logs.Count > neighborNextIndexes[ReceiverId])
+        //{
+        //    for(int i = 0; i < 20; i++)
+        //    {
+        //        Console.WriteLine("Exiting because receivers logs are out of date");
+        //    }
+        //    return;
+        //}
+
         int sendingLogIndex = neighborNextIndexes[ReceiverId];
         int logTerm = (logs.Count > sendingLogIndex && sendingLogIndex > 0) ? logs[sendingLogIndex].term : 0;
         List<Log> entries = logs.Skip(sendingLogIndex).ToList();

@@ -108,3 +108,4 @@ C:\Users\bryce\source\repos\DistributedTDDProject1\DistributedTDDTests\obj\Debug
 C:\Users\bryce\source\repos\DistributedTDDProject1\DistributedTDDTests\obj\Debug\net8.0\DistributedTDDElectionTests.pdb
 C:\Users\bryce\source\repos\DistributedTDDProject1\DistributedTDDTests\obj\Debug\net8.0\DistributedTDDElectionTests.genruntimeconfig.cache
 C:\Users\bryce\source\repos\DistributedTDDProject1\DistributedTDDTests\obj\Debug\net8.0\ref\DistributedTDDElectionTests.dll
+C:\Users\bryce\source\repos\DistributedTDDProject1\DistributedTDDTests\bin\Debug\net8.0\Serilog.dll

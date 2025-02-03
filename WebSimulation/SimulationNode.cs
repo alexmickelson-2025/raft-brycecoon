@@ -76,8 +76,8 @@ public class SimulationNode : INode
         return ((INode)InnerNode).RequestVote(new VoteRequestRPC { candidateId = id, candidateTerm = term });
     }
 
-    public bool receiveCommandFromClient(string key, string value)
+    public Task<bool> receiveCommandFromClient(string key, string value)
     {
-        return InnerNode.recieveCommandFromClient(key, value);
+        return InnerNode.recieveCommandFromClient(new clientData { key = key, message = value });
     }
 }

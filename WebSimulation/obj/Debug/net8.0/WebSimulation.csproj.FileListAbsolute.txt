@@ -32,3 +32,4 @@ C:\Users\bryce\source\repos\DistributedTDDProject1\WebSimulation\obj\Debug\net8.
 C:\Users\bryce\source\repos\DistributedTDDProject1\WebSimulation\bin\Debug\net8.0\DistributedTDDProject1.dll
 C:\Users\bryce\source\repos\DistributedTDDProject1\WebSimulation\bin\Debug\net8.0\DistributedTDDProject1.pdb
 C:\Users\bryce\source\repos\DistributedTDDProject1\WebSimulation\obj\Debug\net8.0\WebSimul.DD33B9D1.Up2Date
+C:\Users\bryce\source\repos\DistributedTDDProject1\WebSimulation\bin\Debug\net8.0\Serilog.dll
