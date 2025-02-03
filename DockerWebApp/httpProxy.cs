@@ -2,16 +2,14 @@ using DistributedTDDProject1;
 
 public class HttpRpcOtherNode : INode
 {
-  public Guid Id { get; }
+  public Guid id { get; set;}
   public string Url { get; }
-    public Guid id { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
-
-    private HttpClient client = new();
+  private HttpClient client = new();
  
   public HttpRpcOtherNode(Guid id, string url)
   {
-    Id = id;
-    Url = url;
+    this.id = id;
+    this.Url = url;
   }
  
   public async Task RequestAppendEntry(AppendEntriesRequestRPC request)

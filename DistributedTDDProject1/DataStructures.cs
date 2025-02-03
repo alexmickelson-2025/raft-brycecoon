@@ -6,14 +6,14 @@ using System.Threading.Tasks;
 
 namespace DistributedTDDProject1;
 
-public class Log
+public record Log
 {
     public string key;
     public int term;
     public string message;
 }
 
-public class AppendEntriesRequestRPC
+public record AppendEntriesRequestRPC
 {
     public Guid LeaderId { get; set; }
     public int Term { get; set; }
@@ -23,7 +23,7 @@ public class AppendEntriesRequestRPC
     public int leaderHighestLogCommitted { get; set; }
 }
 
-public class AppendEntriesResponseRPC
+public record AppendEntriesResponseRPC
 {
     public Guid sendingNode { get; set; }
     public bool received {  get; set; }
@@ -31,18 +31,18 @@ public class AppendEntriesResponseRPC
     public int term { get; set; }
 }
 
-public class VoteRequestRPC
+public record VoteRequestRPC
 {
     public Guid candidateId { get; set; }  
     public int candidateTerm { get; set; }
 }
 
-public class VoteResponseRPC
+public record VoteResponseRPC
 {
     public bool response { get; set; }
 }
 
-public class clientData
+public record clientData
 {
     public string key { get; set; }
     public string message { get; set; }

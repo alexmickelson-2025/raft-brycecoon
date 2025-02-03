@@ -11,7 +11,6 @@ public interface INode
 {
     public Guid id { get; set; }
 
-
     public Task RequestVote(VoteRequestRPC rpc);
     public Task ReceiveVoteResponse(VoteResponseRPC rpc);
     public Task RequestAppendEntry(AppendEntriesRequestRPC rpc);
