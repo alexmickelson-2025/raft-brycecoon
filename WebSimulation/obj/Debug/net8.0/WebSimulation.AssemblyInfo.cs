@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("WebSimulation")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+ba8cd00d05e4daade8e9f0e274f212c9a1c04392")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+43e297a7a15d6f7b99d394d31e761d17d0e2e078")]
 [assembly: System.Reflection.AssemblyProductAttribute("WebSimulation")]
 [assembly: System.Reflection.AssemblyTitleAttribute("WebSimulation")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
