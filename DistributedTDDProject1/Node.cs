@@ -152,19 +152,9 @@ public class Node : INode
             throw new Exception("Receiving Node was null");
         }
 
-        //if(logs.Count > neighborNextIndexes[ReceiverId])
-        //{
-        //    for(int i = 0; i < 20; i++)
-        //    {
-        //        Console.WriteLine("Exiting because receivers logs are out of date");
-        //    }
-        //    return;
-        //}
-
         int sendingLogIndex = neighborNextIndexes[ReceiverId];
         int logTerm = (logs.Count > sendingLogIndex && sendingLogIndex > 0) ? logs[sendingLogIndex].term : 0;
         List<Log> entries = logs.Skip(sendingLogIndex).ToList();
-        Console.WriteLine($"Entries Count: {entries.Count}");
 
         var rpc = new AppendEntriesRequestRPC
         {
@@ -196,22 +186,32 @@ public class Node : INode
 
         if ((rpc.Term >= term) && rpc.PrevLogIndex == prevIndex)
         {
-            //put this after adding logs later
-            if (rpc.leaderHighestLogCommitted >= rpc.PrevLogIndex && rpc.PrevLogIndex < logs.Count && logs.Count > 0)
-            {
-                stateMachine[logs[rpc.PrevLogIndex].key] = logs[rpc.PrevLogIndex].message;
-                highestCommittedLogIndex = rpc.PrevLogIndex;
-            }
 
-            if (PreviousLogMatches(rpc))
-            {
-                AddReceivedLogsToPersonalLogs(rpc);
-            }
-            else if (logs.Count == 0) //index == 0 and term == 0
-            {
-                AddReceivedLogsToPersonalLogs(rpc);
-            }
+            AddReceivedLogsToPersonalLogs(rpc);
 
+            //if (PreviousLogMatches(rpc))
+            //{
+            //}
+            //else if (logs.Count == 0 && rpc.PrevLogIndex == -1) //index == 0 and term == 0
+            //{
+            //    //AddReceivedLogsToPersonalLogs(rpc);
+            //}
+            //else
+            //{
+            //    Console.WriteLine("cannot add");
+            //}
+
+
+            List<Log> logsToCommit = logs[(highestCommittedLogIndex+1)..(rpc.leaderHighestLogCommitted+1)];
+            highestCommittedLogIndex = rpc.leaderHighestLogCommitted;
+            foreach(var log in logsToCommit)
+            {
+                stateMachine[log.key] = log.message;
+            }
+            if (logs.Count > stateMachine.Count)
+            {
+                logs.Remove(logs.Last());
+            }
             SendReceivedTrueToLeader(leaderNode);
         }
         else if (LeaderHasLowerPrevIndex(rpc)) //valid leader, but index is less than ours
@@ -241,10 +241,10 @@ public class Node : INode
         return (rpc.Term >= term) && (rpc.PrevLogIndex < prevIndex + 1);
     }
 
-    private bool PreviousLogMatches(AppendEntriesRequestRPC rpc)
-    {
-        return logs.Count > 0 && rpc.PrevLogTerm == logs.Last().term && rpc.PrevLogIndex == prevIndex;
-    }
+    //private bool PreviousLogMatches(AppendEntriesRequestRPC rpc)
+    //{
+    //    return logs.Count > 0 && rpc.PrevLogTerm == logs.Last().term && rpc.PrevLogIndex == prevIndex;
+    //}
 
     private Task SendReceivedFalseToLeader(INode leaderNode)
     {
@@ -265,7 +265,7 @@ public class Node : INode
         {
             sendingNode = id,
             received = true,
-            followerHighestReceivedIndex = logs.Count //most recent change
+            followerHighestReceivedIndex = prevIndex + 1 //most recent change
         };
         leaderNode.ReceiveAppendEntryRPCResponse(rpcResponse);
         return Task.CompletedTask;
@@ -273,9 +273,14 @@ public class Node : INode
 
     private void AddReceivedLogsToPersonalLogs(AppendEntriesRequestRPC rpc)
     {
-        foreach (Log entry in rpc.Entries)
+        foreach (Log log in rpc.Entries)
         {
-            logs.Add(entry);
+            if (log.term > highestCommittedLogIndex)
+            {
+                logs.Add(log);
+                stateMachine[log.key] = log.message; 
+                highestCommittedLogIndex++;
+            }
         }
     }
 
@@ -385,9 +390,4 @@ public class Node : INode
         heartbeatTimer.Start();
         electionTimeoutTimer.Start();
     }
-
-    //public async Task ReceiveClientResponse(ClientResponseArgs clientResponseArgs)
-    //{
-
-    //}
 }
