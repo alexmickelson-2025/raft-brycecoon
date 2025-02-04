@@ -189,29 +189,16 @@ public class Node : INode
 
             AddReceivedLogsToPersonalLogs(rpc);
 
-            //if (PreviousLogMatches(rpc))
-            //{
-            //}
-            //else if (logs.Count == 0 && rpc.PrevLogIndex == -1) //index == 0 and term == 0
-            //{
-            //    //AddReceivedLogsToPersonalLogs(rpc);
-            //}
-            //else
-            //{
-            //    Console.WriteLine("cannot add");
-            //}
-
-
             List<Log> logsToCommit = logs[(highestCommittedLogIndex+1)..(rpc.leaderHighestLogCommitted+1)];
             highestCommittedLogIndex = rpc.leaderHighestLogCommitted;
             foreach(var log in logsToCommit)
             {
                 stateMachine[log.key] = log.message;
             }
-            if (logs.Count > stateMachine.Count)
-            {
-                logs.Remove(logs.Last());
-            }
+            //if (logs.Count > stateMachine.Count)
+            //{
+            //    logs.Remove(logs.Last());
+            //}
             SendReceivedTrueToLeader(leaderNode);
         }
         else if (LeaderHasLowerPrevIndex(rpc)) //valid leader, but index is less than ours
@@ -240,11 +227,6 @@ public class Node : INode
     {
         return (rpc.Term >= term) && (rpc.PrevLogIndex < prevIndex + 1);
     }
-
-    //private bool PreviousLogMatches(AppendEntriesRequestRPC rpc)
-    //{
-    //    return logs.Count > 0 && rpc.PrevLogTerm == logs.Last().term && rpc.PrevLogIndex == prevIndex;
-    //}
 
     private Task SendReceivedFalseToLeader(INode leaderNode)
     {
@@ -278,8 +260,11 @@ public class Node : INode
             if (log.term > highestCommittedLogIndex)
             {
                 logs.Add(log);
-                stateMachine[log.key] = log.message; 
-                highestCommittedLogIndex++;
+                stateMachine[log.key] = log.message;  // Commit log immediately
+                if(logs.Count > stateMachine.Count)
+                {
+                    logs.Remove(logs.Last());
+                }
             }
         }
     }

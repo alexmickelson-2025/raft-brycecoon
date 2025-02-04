@@ -1,10 +1,10 @@
 {
   "version": 2,
-  "dgSpecHash": "MIz2cJtj024=",
+  "dgSpecHash": "aDvhWMhybBY=",
   "success": true,
-  "projectFilePath": "C:\\Users\\bryce\\source\\repos\\DistributedTDDProject1\\DistributedTDDProject1\\DistributedTDDProject1.csproj",
+  "projectFilePath": "/app/DistributedTDDProject1/DistributedTDDProject1.csproj",
   "expectedPackageFiles": [
-    "C:\\Users\\bryce\\.nuget\\packages\\serilog\\4.2.0\\serilog.4.2.0.nupkg.sha512"
+    "/home/developer/.nuget/packages/serilog/4.2.0/serilog.4.2.0.nupkg.sha512"
   ],
   "logs": []
 }

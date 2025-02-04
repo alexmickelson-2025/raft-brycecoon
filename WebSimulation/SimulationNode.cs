@@ -1,4 +1,5 @@
 ﻿using DistributedTDDProject1;
+using System.Text.Json;
 using System.Timers;
 
 namespace WebSimulation;
@@ -24,6 +25,9 @@ public class SimulationNode : INode
     public Dictionary<string,string> stateMachine { get => InnerNode.stateMachine; set => InnerNode.stateMachine = value; }
     public int highestCommittedLogIndex { get => InnerNode.highestCommittedLogIndex; set => InnerNode.highestCommittedLogIndex = value; }
     public int prevIndex { get => InnerNode.prevIndex; }
+    public string message { get; set; }
+    public Dictionary<Guid, int> neighborNextIndexes { get => InnerNode.neighborNextIndexes; set => InnerNode.neighborNextIndexes = value; }
+
 
     public void Pause()
     {
@@ -32,6 +36,7 @@ public class SimulationNode : INode
 
     public async Task RequestAppendEntry(AppendEntriesRequestRPC rpc)
     {
+        message = JsonSerializer.Serialize(rpc);
         await InnerNode.RequestAppendEntry(rpc);
     }
 
@@ -59,16 +64,6 @@ public class SimulationNode : INode
     {
         InnerNode.Resume();
     }
-
-    //public async Task sendAppendRPCRequest(INode recievingNode)
-    //{
-    //    await InnerNode.sendAppendRPCRequest(recievingNode.id);
-    //}
-
-    //public async Task sendHeartbeatRPC(INode[] nodes)
-    //{
-    //    await InnerNode.sendHeartbeatRPC(nodes);
-    //}
 
 
     public Task sendVoteRequest(Guid id, int term)
