@@ -7,7 +7,7 @@ builder.WebHost.UseUrls("http://0.0.0.0:8080");
  
 var nodeId = Environment.GetEnvironmentVariable("NODE_ID") ?? throw new Exception("NODE_ID environment variable not set");
 var otherNodesRaw = Environment.GetEnvironmentVariable("OTHER_NODES") ?? throw new Exception("OTHER_NODES environment variable not set");
-var nodeIntervalScalarRaw = Environment.GetEnvironmentVariable("NODE_INTERVAL_SCALAR") ?? throw new Exception("NODE_INTERVAL_SCALAR environment variable not set");
+var nodeUrls = Environment.GetEnvironmentVariable("NODE_URLS") ?? throw new Exception("NODE_INTERVAL_SCALAR environment variable not set");
  
 var app = builder.Build();
  
@@ -40,39 +40,27 @@ INode[] otherNodes = otherNodesRaw
     })
     .ToArray();
 
-//----------------------------------------------------
-var nodes = otherNodesRaw
-    .Split(";", StringSplitOptions.RemoveEmptyEntries)
-    .Select(s => {
-        var parts = s.Split(",", StringSplitOptions.RemoveEmptyEntries);
-        if (parts.Length != 2)
-        {
-            throw new FormatException($"Invalid node format: {s}");
-        }
-        string guidString = parts[0].Trim();
-        string url = parts[1].Trim();
-        return (Guid: Guid.Parse(guidString), Url: url);
-    })
-    .ToArray();
-
-// Print extracted GUIDs and URLs
-foreach (var thing in nodes)
-{
-    Console.WriteLine($"GUID: {thing.Guid}, URL: {thing.Url}");
-}
-//----------------------------------------------------
- 
-Console.WriteLine($"other nodes {JsonSerializer.Serialize(otherNodes)}");
- 
+// var nodes = otherNodesRaw
+//     .Split(";", StringSplitOptions.RemoveEmptyEntries)
+//     .Select(s => {
+//         var parts = s.Split(",", StringSplitOptions.RemoveEmptyEntries);
+//         if (parts.Length != 2)
+//         {
+//             throw new FormatException($"Invalid node format: {s}");
+//         }
+//         string guidString = parts[0].Trim();
+//         string url = parts[1].Trim();
+//         return (Guid: Guid.Parse(guidString), Url: url);
+//     })
+//     .ToArray();
+  
 var node = new Node()
 {
   id = Guid.Parse(nodeId),
 };
 
 node.neighbors = otherNodes;
- 
-Node.NodeIntervalScalar = double.Parse(nodeIntervalScalarRaw);
-  
+
 app.MapPost("/request/appendEntries", async (AppendEntriesRequestRPC request) =>
 {
   Console.WriteLine($"received append entries request {request}");

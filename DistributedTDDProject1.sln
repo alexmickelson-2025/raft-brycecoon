@@ -13,6 +13,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LogReplicationTests", "LogR
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DockerWebApp", "DockerWebApp\DockerWebApp.csproj", "{F2126067-D3E8-4976-8220-26A929FDB1C1}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RaftClient", "RaftClient\RaftClient.csproj", "{B200C303-2D5C-4541-A9DA-BDBB25B1675D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -39,6 +41,10 @@ Global
 		{F2126067-D3E8-4976-8220-26A929FDB1C1}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F2126067-D3E8-4976-8220-26A929FDB1C1}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F2126067-D3E8-4976-8220-26A929FDB1C1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B200C303-2D5C-4541-A9DA-BDBB25B1675D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B200C303-2D5C-4541-A9DA-BDBB25B1675D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B200C303-2D5C-4541-A9DA-BDBB25B1675D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B200C303-2D5C-4541-A9DA-BDBB25B1675D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

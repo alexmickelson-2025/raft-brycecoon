@@ -1,39 +1,10 @@
 ﻿@page "/"
+@using DistributedTDDProject1
 
-
-@foreach(var node in otherNodes)
-{
-    <div>@node</div>
-}
-
+<div>@nodeUrls</div>
 
 @code {
-@* var nodeId = Environment.GetEnvironmentVariable("NODE_ID") ?? throw new Exception("NODE_ID environment variable not set");
-var otherNodesRaw = Environment.GetEnvironmentVariable("OTHER_NODES") ?? throw new Exception("OTHER_NODES environment variable not set");
-INode[] otherNodes = otherNodesRaw
-    .Split(";", StringSplitOptions.RemoveEmptyEntries)
-    .Select(s => {
-        var parts = s.Split(",", StringSplitOptions.RemoveEmptyEntries);
-        
-        if (parts.Length != 2)
-        {
-            throw new FormatException($"Invalid node format: '{s}'");
-        }
 
-        string guidString = parts[0].Trim();
-        string url = parts[1].Trim();
-
-        // Print the extracted GUID before parsing
-        Console.WriteLine($"Extracted GUID: '{guidString}'");
-
-        if (!Guid.TryParse(guidString, out var guid))
-        {
-            throw new FormatException($"Failed to parse GUID: '{guidString}'");
-        }
-
-        return new HttpRpcOtherNode(guid, url);
-    })
-    .ToArray(); *@
-
+ public string nodeUrls = Environment.GetEnvironmentVariable("NODE_URLS");
 
 }

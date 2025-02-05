@@ -37,6 +37,7 @@ public class Node : INode
     public int prevIndex { get => logs.Count -1; }
     public int highestCommittedLogIndex;
     public static double NodeIntervalScalar;
+    public string url;
 
     public Node()
     {
@@ -57,6 +58,7 @@ public class Node : INode
         electionTimeoutTimer.Elapsed += Timer_Timeout;
         electionTimeoutTimer.AutoReset = false;
         electionTimeoutTimer.Start();
+        
     }
 
     public Task RequestVoteFromEachNeighbor()
