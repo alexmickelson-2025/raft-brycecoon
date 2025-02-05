@@ -11,7 +11,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WebSimulation", "WebSimulat
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LogReplicationTests", "LogReplicationTests\LogReplicationTests.csproj", "{FA92B592-3A2E-4270-BBE0-B111E957F6FF}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DockerWebApi", "DockerWebApp\DockerWebApi.csproj", "{F2126067-D3E8-4976-8220-26A929FDB1C1}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DockerWebApp", "DockerWebApp\DockerWebApp.csproj", "{F2126067-D3E8-4976-8220-26A929FDB1C1}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
