@@ -8,7 +8,7 @@
 
 
 @code {
-var nodeId = Environment.GetEnvironmentVariable("NODE_ID") ?? throw new Exception("NODE_ID environment variable not set");
+@* var nodeId = Environment.GetEnvironmentVariable("NODE_ID") ?? throw new Exception("NODE_ID environment variable not set");
 var otherNodesRaw = Environment.GetEnvironmentVariable("OTHER_NODES") ?? throw new Exception("OTHER_NODES environment variable not set");
 INode[] otherNodes = otherNodesRaw
     .Split(";", StringSplitOptions.RemoveEmptyEntries)
@@ -33,7 +33,7 @@ INode[] otherNodes = otherNodesRaw
 
         return new HttpRpcOtherNode(guid, url);
     })
-    .ToArray();
+    .ToArray(); *@
 
 
 }
