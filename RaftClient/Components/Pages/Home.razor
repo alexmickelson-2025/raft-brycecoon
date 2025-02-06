@@ -1,6 +1,7 @@
 ﻿@page "/"
 @using DistributedTDDProject1
 
+
 <div>@nodeUrls</div>
 @* @foreach(var data in allNodeData)
 {
@@ -25,7 +26,7 @@
             {
                 try
                 {
-                    var nodeData = await httpClient.GetFromJsonAsync<NodeDataDTO>(url + "/request/nodeData");
+                    @* var nodeData = await httpClient.GetFromJsonAsync<NodeDataDTO>(url + "/request/nodeData");
                     if (nodeData != null)
                     {
                         allNodeData[url] = nodeData;
@@ -33,7 +34,7 @@
                     else
                     {
                         Console.WriteLine("did not get data for" + url);
-                    }
+                    } *@
                 }
                 catch (HttpRequestException)
                 {

@@ -13,7 +13,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LogReplicationTests", "LogR
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DockerWebApp", "DockerWebApp\DockerWebApp.csproj", "{F2126067-D3E8-4976-8220-26A929FDB1C1}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RaftClient", "RaftClient\RaftClient.csproj", "{B200C303-2D5C-4541-A9DA-BDBB25B1675D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RaftClient", "RaftClient\RaftClient.csproj", "{B200C303-2D5C-4541-A9DA-BDBB25B1675D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
