@@ -53,6 +53,6 @@ services:
     volumes:
       - ./:/app
     environment:
-      - NODE_URLS=http://node1:8080;http://node2:8080;http://node2:8080;http://node3:8080
+      - NODE_URLS=http://node1:8080;http://node2:8080;http://node3:8080
     command: dotnet watch --project RaftClient 
 

@@ -1,5 +1,4 @@
-﻿using Serilog;
-using System.Timers;
+﻿using System.Timers;
 using System.Xml.Linq;
 using System.Text.Json;
 

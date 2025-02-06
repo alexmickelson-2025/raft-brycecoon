@@ -2,9 +2,48 @@
 @using DistributedTDDProject1
 
 <div>@nodeUrls</div>
+@foreach(var data in allNodeData)
+{
+    <div>@data.Key</div>
+    <div>@data.Value</div>
+})
 
 @code {
+    private Timer timer;
+    public List<string> nodeUrls = Environment.GetEnvironmentVariable("NODE_URLS")?
+        .Split(";", StringSplitOptions.RemoveEmptyEntries)
+        .ToList() ?? new List<string>();
+    public Dictionary<string, NodeDataDTO> allNodeData;
+    public HttpClient httpClient;
 
- public string nodeUrls = Environment.GetEnvironmentVariable("NODE_URLS");
+    protected override void OnInitialized()
+    {
+        timer = new Timer(async _ =>
+        {
+            await Task.WhenAll(
+            nodeUrls.Select(async url =>
+            {
+                try
+                {
+                    var nodeData = await httpClient.GetFromJsonAsync<NodeDataDTO>(url + "/request/nodeData");
+                    if (nodeData != null)
+                    {
+                        allNodeData[url] = nodeData;
+                    }
+                    else
+                    {
+                        Console.WriteLine("did not get data for" + url);
+                    }
+                }
+                catch (HttpRequestException)
+                {
+                    Console.WriteLine("node" + url + "is down");
+
+                }
+            }).ToArray()
+            );
+            await InvokeAsync(StateHasChanged);
+        }, null, 0, 200);
+    }
 
 }
