@@ -2,13 +2,14 @@
 
 namespace RaftClient;
 
-public class NodeDataDTO {
-    public Guid id;
-    public nodeState state; 
-    public int timeoutPercentageLeft;
-    public int Term;
-    public Guid CurrentTermLeader; 
-    public int CommittedEntryIndex;
-    public List<Log> logs;
-    public Dictionary<string,string> StateMachine;
-  };
+public record NodeDataDTO (
+    Guid id,
+    nodeState state,
+    long timeoutPercentageLeft,
+    int Term,
+    Guid CurrentTermLeader,
+    int CommittedEntryIndex,
+    List<Log>? logs,
+    Dictionary<string,string>? StateMachine
+);
+

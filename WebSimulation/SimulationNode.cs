@@ -1,5 +1,6 @@
 ﻿using DistributedTDDProject1;
 using System.Text.Json;
+using System.Threading.Tasks;
 using System.Timers;
 
 namespace WebSimulation;
@@ -71,8 +72,8 @@ public class SimulationNode : INode
         return ((INode)InnerNode).RequestVote(new VoteRequestRPC { candidateId = id, candidateTerm = term });
     }
 
-    public Task<bool> receiveCommandFromClient(string key, string value)
+    public async Task receiveCommandFromClient(string key, string value)
     {
-        return InnerNode.recieveCommandFromClient(new clientData { key = key, message = value });
+        await InnerNode.recieveCommandFromClient(new clientData { key = key, message = value });
     }
 }

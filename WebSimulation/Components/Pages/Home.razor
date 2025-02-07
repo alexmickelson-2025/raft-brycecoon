@@ -169,6 +169,6 @@
         }
 
         // Await the task directly without using .Result
-        setCommmandReceived = await receivingNode.receiveCommandFromClient(keyInput, valueInput);
+        await receivingNode.receiveCommandFromClient(keyInput, valueInput);
     }
 }

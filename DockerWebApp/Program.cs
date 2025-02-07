@@ -49,52 +49,50 @@ var node = new Node()
 
 node.neighbors = otherNodes;
 
-app.MapGet("/request/nodeData", async () =>
+app.MapGet("/request/nodeData", () =>
 {
-    Console.WriteLine($"received node data request");
 
     //set the node Data then send it
-    var data = new NodeDataDTO
-    {
-        id = Guid.Parse(nodeId),
-        state = node.state,
-        timeoutPercentageLeft = 10,
-        Term = node.term,
-        CurrentTermLeader = node.currentLeader,
-        CommittedEntryIndex = node.highestCommittedLogIndex,
-        logs = node.logs,
-        StateMachine = node.stateMachine,
-    };
-
-    return data;
+    return new NodeDataDTO
+    (
+        id: node.id,
+        state: node.state,
+        timeoutPercentageLeft: node.timeoutInterval,
+        Term : node.term,
+        CurrentTermLeader : node.currentLeader,
+        CommittedEntryIndex : node.highestCommittedLogIndex,
+        logs : node.logs,
+        StateMachine : node.stateMachine
+    );
 });
 
 app.MapPost("/request/appendEntries", async (AppendEntriesRequestRPC request) =>
 {
-    Console.WriteLine($"received append entries request {request}");
+    // Console.WriteLine($"received append entries request {request}");
     await node.RequestAppendEntry(request);
 });
 
 app.MapPost("/request/vote", async (VoteRequestRPC request) =>
 {
-    Console.WriteLine($"received vote request {request}");
+    // Console.WriteLine($"received vote request {request}");
     await node.RequestVote(request);
 });
 
 app.MapPost("/response/appendEntries", async (AppendEntriesResponseRPC response) =>
 {
-    Console.WriteLine($"received append entries response {response}");
+    // Console.WriteLine($"received append entries response {response}");
     await node.ReceiveAppendEntryRPCResponse(response);
 });
 
 app.MapPost("/response/vote", async (VoteResponseRPC response) =>
 {
-    Console.WriteLine($"received vote response {response}");
+    // Console.WriteLine($"received vote response {response}");
     await node.ReceiveVoteResponse(response);
 });
 
 app.MapPost("/request/command", async (clientData data) =>
 {
+    Console.WriteLine($"Received data: key = {data.key}, message = {data.message}");
     await node.recieveCommandFromClient(data);
 });
 

@@ -6,7 +6,6 @@ C:\Users\bryce\source\repos\DistributedTDDProject1\WebSimulation\bin\Debug\net8.
 C:\Users\bryce\source\repos\DistributedTDDProject1\WebSimulation\bin\Debug\net8.0\WebSimulation.runtimeconfig.json
 C:\Users\bryce\source\repos\DistributedTDDProject1\WebSimulation\bin\Debug\net8.0\WebSimulation.dll
 C:\Users\bryce\source\repos\DistributedTDDProject1\WebSimulation\bin\Debug\net8.0\WebSimulation.pdb
-C:\Users\bryce\source\repos\DistributedTDDProject1\WebSimulation\bin\Debug\net8.0\Serilog.dll
 C:\Users\bryce\source\repos\DistributedTDDProject1\WebSimulation\bin\Debug\net8.0\DistributedTDDProject1.dll
 C:\Users\bryce\source\repos\DistributedTDDProject1\WebSimulation\bin\Debug\net8.0\DistributedTDDProject1.pdb
 C:\Users\bryce\source\repos\DistributedTDDProject1\WebSimulation\obj\Debug\net8.0\WebSimulation.csproj.AssemblyReference.cache

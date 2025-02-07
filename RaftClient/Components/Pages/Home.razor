@@ -1,50 +1,147 @@
 ﻿@page "/"
+@rendermode InteractiveServer
 @using DistributedTDDProject1
 
+<div class="row">
+    <div class="mb-4">
+        <h2>Set</h2>
+        <label>Node:</label>
+        <select @bind="selectedNodeId">
+            <option>SELECT A NODE</option>
+            @foreach (var node in allNodeData.ToList())
+            {
+                <option value="@node.Value.id">@node.Value.id</option>
+            }
+        </select>
+        <label for="keyInput">Key:</label>
+        <input type="text" id="keyInput" @bind=keyInput />
+        <label for="valueInput">Value:</label>
+        <input type="text" id="valueInput" @bind=valueInput />
+        <button @onclick="() => SendLogToLeader()">send</button>
 
-<div>@nodeUrls</div>
-@* @foreach(var data in allNodeData)
-{
-    <div>@data.Key</div>
-    <div>@data.Value</div>
-}) *@
+    </div> @foreach (var item in allNodeData.ToList())
+    {
+        <div class="col-12 col-md-4 mb-4 ">
+            <div class="card shadow-sm w-10">
+                <div class="card-body">
+                    <h5 class="card-title">Node: @item.Value.id</h5>
+                    <p><strong>State:</strong> @item.Value.state</p>
+                    <p><strong>Term:</strong> @item.Value.Term</p>
+                    <p><strong>Perceived Current Leader:</strong> @item.Value.CurrentTermLeader</p>
+                    <p><strong>Timeout:</strong> @(item.Value.timeoutPercentageLeft)</p>
+
+                    <div class="progress mb-3" role="progressbar" aria-label="Timeout Progress"
+                        aria-valuenow="@item.Value.timeoutPercentageLeft" aria-valuemin="0" aria-valuemax="300">
+                        <div class="progress-bar bg-success"
+                            style="width: @((item.Value.timeoutPercentageLeft / 300.0) * 100)%"></div>
+                    </div>
+
+                    <button class="btn btn-danger mb-2" @onClick="() => PauseNode(item.Value.id)">
+                        Stop Node
+                    </button>
+
+                    <p>Commit Index: @item.Value.CommittedEntryIndex</p>
+                    <p>prevIndex: @item.Value.logs.Count</p>
+
+                    <h6>Journal Entries</h6>
+                    <div>
+                        @foreach (var (log, index) in item.Value.logs.Select((log, index) => (log, index)))
+                        {
+                            <p>Index: @index | Key: @log.key | Term Id: @log.term | Committed?:
+                                @(item.Value.StateMachine.ContainsKey(log.key) ? "Yes" : "No")
+                            </p>
+                        }
+                    </div>
+
+                    <h6>State Machine</h6>
+                    <div>
+                        @foreach (var state in item.Value.StateMachine)
+                        {
+                            <p>Key: @state.Key | Value: @state.Value</p>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+<div>
+    leaderNodeUrl: @leaderNodeUrl
+    Error Message: @errorMessage
+</div>
+
 
 @code {
     private Timer timer;
     public List<string> nodeUrls = Environment.GetEnvironmentVariable("NODE_URLS")?
-        .Split(";", StringSplitOptions.RemoveEmptyEntries)
-        .ToList() ?? new List<string>();
-    public Dictionary<string, NodeDataDTO> allNodeData;
-    public HttpClient httpClient;
+    .Split(";", StringSplitOptions.RemoveEmptyEntries)
+    .ToList() ?? new List<string>();
+    public Dictionary<string, NodeDataDTO> allNodeData = new();
+    public HttpClient httpClient = new HttpClient();
+    public string keyInput;
+    private string valueInput;
+    private Guid selectedNodeId;
+    private string leaderNodeUrl;
+    public string errorMessage;
 
     protected override void OnInitialized()
     {
         timer = new Timer(async _ =>
         {
             await Task.WhenAll(
-            nodeUrls.Select(async url =>
+    nodeUrls.Select(async url =>
+    {
+            try
             {
-                try
+                NodeDataDTO nodeData = await httpClient.GetFromJsonAsync<NodeDataDTO>(url + "/request/nodeData");
+                if (nodeData != null)
                 {
-                    @* var nodeData = await httpClient.GetFromJsonAsync<NodeDataDTO>(url + "/request/nodeData");
-                    if (nodeData != null)
-                    {
-                        allNodeData[url] = nodeData;
-                    }
-                    else
-                    {
-                        Console.WriteLine("did not get data for" + url);
-                    } *@
+                    allNodeData[url] = nodeData;
                 }
-                catch (HttpRequestException)
+                else
                 {
-                    Console.WriteLine("node" + url + "is down");
+                    Console.WriteLine("did not get data for" + url);
+                }
+            }
+            catch (HttpRequestException)
+            {
+                Console.WriteLine("node" + url + "is down");
 
-                }
-            }).ToArray()
-            );
+            }
+        })
+    );
             await InvokeAsync(StateHasChanged);
         }, null, 0, 200);
+    }
+
+    async void SendLogToLeader()
+    {
+        errorMessage = "";
+
+        leaderNodeUrl = allNodeData
+        .FirstOrDefault(kvp => kvp.Value.id == selectedNodeId).Key;
+
+        if(keyInput == null)
+        {
+            errorMessage = "Key was null";
+        }
+        if(valueInput == null)
+        {
+            errorMessage += "| Value was null";
+        }
+        if(leaderNodeUrl == null)
+        {
+            errorMessage += "|selected node was null";
+        }
+
+        if (errorMessage == "")
+        {
+            var sendingData = new clientData{key=keyInput, message=valueInput};
+            errorMessage = "key,value: " + sendingData.key + " " + sendingData.message;
+            Console.WriteLine(sendingData.ToString());
+
+            await httpClient.PostAsJsonAsync(leaderNodeUrl + "/request/command", sendingData);
+        }
     }
 
 }

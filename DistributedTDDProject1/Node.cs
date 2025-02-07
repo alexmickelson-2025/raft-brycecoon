@@ -136,7 +136,6 @@ public class Node : INode
         sendHeartbeatRPC(neighbors);
     }
 
-
     public void sendHeartbeatRPC(INode[] nodes)
     {
         foreach (var node in nodes)
@@ -196,13 +195,10 @@ public class Node : INode
             {
                 stateMachine[log.key] = log.message;
             }
-            //if (logs.Count > stateMachine.Count)
-            //{
-            //    logs.Remove(logs.Last());
-            //}
+
             SendReceivedTrueToLeader(leaderNode);
         }
-        else if (LeaderHasLowerPrevIndex(rpc)) //valid leader, but index is less than ours
+        else if (LeaderHasLowerPrevIndex(rpc))
         {
             for (int i = 0; i < (prevIndex - rpc.PrevLogIndex); i++)
             {
@@ -347,7 +343,7 @@ public class Node : INode
         electionTimeoutTimer.Start();
     }
 
-    public async Task<bool> recieveCommandFromClient(clientData data)
+    public async Task recieveCommandFromClient(clientData data)
     {
         if (state == nodeState.LEADER)
         {
@@ -356,13 +352,8 @@ public class Node : INode
             newLog.term = term;
             newLog.message = data.message;
             logs.Add(newLog);
-
-            return true;
         }
-        else
-        {
-            return false;
-        }
+        await Task.CompletedTask;
     }
 
     public void Pause()
