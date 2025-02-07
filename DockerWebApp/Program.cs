@@ -92,8 +92,13 @@ app.MapPost("/response/vote", async (VoteResponseRPC response) =>
 
 app.MapPost("/request/command", async (clientData data) =>
 {
-    Console.WriteLine($"Received data: key = {data.Key}, message = {data.Message}");
     await node.recieveCommandFromClient(data);
+});
+
+app.MapPost("/request/pause", async () =>
+{
+    Console.WriteLine("Received Pause Request");
+    await node.Pause();
 });
 
 app.Run();

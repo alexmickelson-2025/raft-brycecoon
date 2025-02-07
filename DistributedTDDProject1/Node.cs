@@ -74,9 +74,6 @@ public class Node : INode
         var candidateNode = neighbors.FirstOrDefault((n) => n.id == rpc.candidateId);
         if (candidateNode == null)
         {
-            Console.WriteLine(rpc);
-            Console.WriteLine(JsonSerializer.Serialize(neighbors));
-
             throw new Exception("Candidate Was Null");
         };
 
@@ -156,7 +153,6 @@ public class Node : INode
         int logTerm = (logs.Count > sendingLogIndex && sendingLogIndex > 0) ? logs[sendingLogIndex].term : 0;
         List<Log> entries = logs.Skip(sendingLogIndex).ToList();
 
-Console.WriteLine("Logging Entries" + JsonSerializer.Serialize(entries));
         var rpc = new AppendEntriesRequestRPC
         {
             LeaderId = id,
@@ -167,7 +163,6 @@ Console.WriteLine("Logging Entries" + JsonSerializer.Serialize(entries));
             leaderHighestLogCommitted = highestCommittedLogIndex
         };
 
-        Console.WriteLine("AppendEntriesRequest is" +JsonSerializer.Serialize(rpc));
         receivingNode.RequestAppendEntry(rpc);
     }
 
@@ -252,10 +247,15 @@ Console.WriteLine("Logging Entries" + JsonSerializer.Serialize(entries));
         return Task.CompletedTask;
     }
 
+    public Task Pause()
+    {
+        electionTimeoutTimer.Stop();
+        heartbeatTimer.Stop();
+        return Task.CompletedTask;
+    }
+
     private void AddReceivedLogsToPersonalLogs(AppendEntriesRequestRPC rpc)
     {
-        Console.WriteLine("In Follower, want rpc.Entries to exist");
-        Console.WriteLine("Data: " + JsonSerializer.Serialize(rpc));
         foreach (Log log in rpc.Entries)
         {
             if (log.term > highestCommittedLogIndex)
@@ -349,27 +349,16 @@ Console.WriteLine("Logging Entries" + JsonSerializer.Serialize(entries));
 
     public Task recieveCommandFromClient(clientData data)
     {
-        Console.WriteLine("Data should not be null here");
-        Console.WriteLine("Data: " + JsonSerializer.Serialize(data));
-        Console.WriteLine("Logs before Adding: " + JsonSerializer.Serialize(logs));
 
         if (state == nodeState.LEADER)
         {
-            Console.WriteLine("In the if statement. Im leader");
             Log newLog = new Log();
             newLog.Key = data.Key;
             newLog.term = term;
             newLog.Message = data.Message;
             logs.Add(newLog);
         }
-        Console.WriteLine("Logs after Adding: " + JsonSerializer.Serialize(logs));
         return Task.CompletedTask;
-    }
-
-    public void Pause()
-    {
-        heartbeatTimer.Stop();
-        electionTimeoutTimer.Stop();
     }
 
     public void Resume()

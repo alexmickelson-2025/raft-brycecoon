@@ -49,7 +49,7 @@
                                  style="width: @(((node.timeoutInterval)/(double)(300)) * 100)%"></div>
                         </div>
 
-                        <button @onClick="() => PauseNode(node.id)">
+                        <button @onclick="() => PauseNode(node.id)">
                             Stop Node
                         </button>
 
@@ -60,8 +60,8 @@
                             @foreach (var (log, index) in node.logs.Select((log, index) => (log, index)))
                             {
                                 <p>
-                                    Index: @index | Key: @log.key | Term Id: @log.term | Committed?:
-                                    @(node.stateMachine.ContainsKey(log.key) ? "Yes" : "No")
+                                    Index: @index | Key: @log.Key | Term Id: @log.term | Committed?:
+                                    @(node.stateMachine.ContainsKey(log.Key) ? "Yes" : "No")
                                 </p>
                             }
                         </div>
@@ -157,6 +157,8 @@
     void PauseNode(Guid nodeToPauseId)
     {
         var node = nodes.FirstOrDefault((n) => n.id == nodeToPauseId);
+        Console.WriteLine("Time to Pause");
+        Console.WriteLine("node" + node.id);
         node.Pause();
     }
 

@@ -32,7 +32,7 @@ public class SimulationNode : INode
 
     public void Pause()
     {
-        InnerNode.Resume();
+        InnerNode.Pause();
     }
 
     public async Task RequestAppendEntry(AppendEntriesRequestRPC rpc)

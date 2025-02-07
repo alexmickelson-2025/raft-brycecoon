@@ -36,14 +36,14 @@
                             style="width: @((item.Value.timeoutPercentageLeft / 300.0) * 100)%"></div>
                     </div>
 
-                    <button class="btn btn-danger mb-2" @onClick="() => PauseNode(item.Value.id)">
+                    <button class="btn btn-danger mb-2" @onclick="() => PauseNode(item.Value.id)">
                         Stop Node
                     </button>
 
                     <p>Commit Index: @item.Value.CommittedEntryIndex</p>
                     <p>prevIndex: @item.Value.logs.Count</p>
 
-                    <h6>Journal Entries</h6>
+                    <h2>Journal Entries</h2>
                     <div>
                         @foreach (var (log, index) in item.Value.logs.Select((log, index) => (log, index)))
                         {
@@ -53,7 +53,7 @@
                         }
                     </div>
 
-                    <h6>State Machine</h6>
+                    <h2>State Machine</h2>
                     <div>
                         @foreach (var state in item.Value.StateMachine)
                         {
@@ -121,27 +121,33 @@
         leaderNodeUrl = allNodeData
         .FirstOrDefault(kvp => kvp.Value.id == selectedNodeId).Key;
 
-        if(keyInput == null)
+        if (keyInput == null)
         {
             errorMessage = "Key was null";
         }
-        if(valueInput == null)
+        if (valueInput == null)
         {
             errorMessage += "| Value was null";
         }
-        if(leaderNodeUrl == null)
+        if (leaderNodeUrl == null)
         {
             errorMessage += "|selected node was null";
         }
 
         if (errorMessage == "")
         {
-            var sendingData = new clientData{Key=keyInput, Message=valueInput};
+            var sendingData = new clientData { Key = keyInput, Message = valueInput };
             errorMessage = "key,value: " + sendingData.Key + " " + sendingData.Message;
-            Console.WriteLine(sendingData.ToString());
-
             await httpClient.PostAsJsonAsync(leaderNodeUrl + "/request/command", sendingData);
         }
+    }
+
+    async void PauseNode(Guid nodeID)
+    {
+        leaderNodeUrl = allNodeData
+        .FirstOrDefault(kvp => kvp.Value.id == nodeID).Key;
+    Console.WriteLine("Pausing Node: " + leaderNodeUrl);
+        await httpClient.PostAsync(leaderNodeUrl + "/request/pause", null);
     }
 
 }
