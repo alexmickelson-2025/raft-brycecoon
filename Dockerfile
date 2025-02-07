@@ -13,6 +13,6 @@ RUN groupadd -g 1000 developer && \
      
 WORKDIR /app
  
-COPY . /app
+COPY . .
  
 CMD dotnet run --project DockerWebApp
