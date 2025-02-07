@@ -33,7 +33,7 @@ public class Node : INode
     public Dictionary<Guid, int> neighborNextIndexes;
     public Dictionary<int, int> LogToTimesReceived;
     public int nextIndex;
-    public int prevIndex { get => logs.Count -1; }
+    public int prevIndex { get => logs.Count - 1; }
     public int highestCommittedLogIndex;
     public static double NodeIntervalScalar;
     public string url;
@@ -57,7 +57,7 @@ public class Node : INode
         electionTimeoutTimer.Elapsed += Timer_Timeout;
         electionTimeoutTimer.AutoReset = false;
         electionTimeoutTimer.Start();
-        
+
     }
 
     public Task RequestVoteFromEachNeighbor()
@@ -75,7 +75,8 @@ public class Node : INode
         if (candidateNode == null)
         {
             throw new Exception("Candidate Was Null");
-        };
+        }
+        ;
 
         if (rpc.candidateTerm > term)
         {
@@ -178,6 +179,12 @@ public class Node : INode
         if (rpc.Term >= term)
         {
             UpdatePerceivedLeader(leaderNode);
+
+            if (electionTimeoutTimer == null)
+            {
+                return Task.CompletedTask;
+            }
+
             ResetTimer();
         }
 
@@ -186,9 +193,9 @@ public class Node : INode
 
             AddReceivedLogsToPersonalLogs(rpc);
 
-            List<Log> logsToCommit = logs[(highestCommittedLogIndex+1)..(rpc.leaderHighestLogCommitted+1)];
+            List<Log> logsToCommit = logs[(highestCommittedLogIndex + 1)..(rpc.leaderHighestLogCommitted + 1)];
             highestCommittedLogIndex = rpc.leaderHighestLogCommitted;
-            foreach(var log in logsToCommit)
+            foreach (var log in logsToCommit)
             {
                 stateMachine[log.Key] = log.Message;
             }
@@ -249,8 +256,21 @@ public class Node : INode
 
     public Task Pause()
     {
-        electionTimeoutTimer.Stop();
-        heartbeatTimer.Stop();
+        if (electionTimeoutTimer != null)
+        {
+            electionTimeoutTimer.Stop();
+            electionTimeoutTimer.Dispose();
+            electionTimeoutTimer = null;
+        }
+
+        if (heartbeatTimer != null)
+        {
+            heartbeatTimer.Stop();
+            heartbeatTimer.Dispose();
+            heartbeatTimer = null;
+        }
+
+
         return Task.CompletedTask;
     }
 
@@ -262,7 +282,7 @@ public class Node : INode
             {
                 logs.Add(log);
                 stateMachine[log.Key] = log.Message;  // Commit log immediately
-                if(logs.Count > stateMachine.Count)
+                if (logs.Count > stateMachine.Count)
                 {
                     logs.Remove(logs.Last());
                 }
@@ -339,12 +359,15 @@ public class Node : INode
 
     public void ResetTimer()
     {
-        electionTimeoutTimer.Stop();
-        timeoutInterval = Random.Shared.NextInt64(150, 301);
-        electionTimeoutTimer = new System.Timers.Timer(timeoutInterval * timeoutMultiplier);
-        electionTimeoutTimer.Elapsed += Timer_Timeout;
-        electionTimeoutTimer.AutoReset = false;
-        electionTimeoutTimer.Start();
+        if (electionTimeoutTimer != null)
+        {
+            electionTimeoutTimer.Stop();
+            timeoutInterval = Random.Shared.NextInt64(150, 301);
+            electionTimeoutTimer = new System.Timers.Timer(timeoutInterval * timeoutMultiplier);
+            electionTimeoutTimer.Elapsed += Timer_Timeout;
+            electionTimeoutTimer.AutoReset = false;
+            electionTimeoutTimer.Start();
+        }
     }
 
     public Task recieveCommandFromClient(clientData data)
