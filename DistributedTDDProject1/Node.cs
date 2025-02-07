@@ -156,6 +156,7 @@ public class Node : INode
         int logTerm = (logs.Count > sendingLogIndex && sendingLogIndex > 0) ? logs[sendingLogIndex].term : 0;
         List<Log> entries = logs.Skip(sendingLogIndex).ToList();
 
+Console.WriteLine("Logging Entries" + JsonSerializer.Serialize(entries));
         var rpc = new AppendEntriesRequestRPC
         {
             LeaderId = id,
@@ -166,6 +167,7 @@ public class Node : INode
             leaderHighestLogCommitted = highestCommittedLogIndex
         };
 
+        Console.WriteLine("AppendEntriesRequest is" +JsonSerializer.Serialize(rpc));
         receivingNode.RequestAppendEntry(rpc);
     }
 
@@ -193,7 +195,7 @@ public class Node : INode
             highestCommittedLogIndex = rpc.leaderHighestLogCommitted;
             foreach(var log in logsToCommit)
             {
-                stateMachine[log.key] = log.message;
+                stateMachine[log.Key] = log.Message;
             }
 
             SendReceivedTrueToLeader(leaderNode);
@@ -252,12 +254,14 @@ public class Node : INode
 
     private void AddReceivedLogsToPersonalLogs(AppendEntriesRequestRPC rpc)
     {
+        Console.WriteLine("In Follower, want rpc.Entries to exist");
+        Console.WriteLine("Data: " + JsonSerializer.Serialize(rpc));
         foreach (Log log in rpc.Entries)
         {
             if (log.term > highestCommittedLogIndex)
             {
                 logs.Add(log);
-                stateMachine[log.key] = log.message;  // Commit log immediately
+                stateMachine[log.Key] = log.Message;  // Commit log immediately
                 if(logs.Count > stateMachine.Count)
                 {
                     logs.Remove(logs.Last());
@@ -305,7 +309,7 @@ public class Node : INode
     {
         highestCommittedLogIndex = prevIndex;
         var logEntry = logs[prevIndex];
-        stateMachine[logEntry.key] = logEntry.message;
+        stateMachine[logEntry.Key] = logEntry.Message;
 
         nextIndex++;
     }
@@ -343,17 +347,23 @@ public class Node : INode
         electionTimeoutTimer.Start();
     }
 
-    public async Task recieveCommandFromClient(clientData data)
+    public Task recieveCommandFromClient(clientData data)
     {
+        Console.WriteLine("Data should not be null here");
+        Console.WriteLine("Data: " + JsonSerializer.Serialize(data));
+        Console.WriteLine("Logs before Adding: " + JsonSerializer.Serialize(logs));
+
         if (state == nodeState.LEADER)
         {
+            Console.WriteLine("In the if statement. Im leader");
             Log newLog = new Log();
-            newLog.key = data.key;
+            newLog.Key = data.Key;
             newLog.term = term;
-            newLog.message = data.message;
+            newLog.Message = data.Message;
             logs.Add(newLog);
         }
-        await Task.CompletedTask;
+        Console.WriteLine("Logs after Adding: " + JsonSerializer.Serialize(logs));
+        return Task.CompletedTask;
     }
 
     public void Pause()

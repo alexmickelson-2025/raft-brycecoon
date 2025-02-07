@@ -92,7 +92,7 @@ app.MapPost("/response/vote", async (VoteResponseRPC response) =>
 
 app.MapPost("/request/command", async (clientData data) =>
 {
-    Console.WriteLine($"Received data: key = {data.key}, message = {data.message}");
+    Console.WriteLine($"Received data: key = {data.Key}, message = {data.Message}");
     await node.recieveCommandFromClient(data);
 });
 

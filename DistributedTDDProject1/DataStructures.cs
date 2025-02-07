@@ -8,9 +8,9 @@ namespace DistributedTDDProject1;
 
 public record Log
 {
-    public string key;
-    public int term;
-    public string message;
+    public string Key {get;set;}
+    public int term {get;set;}
+    public string Message {get;set;}
 }
 
 public record AppendEntriesRequestRPC
@@ -19,7 +19,7 @@ public record AppendEntriesRequestRPC
     public int Term { get; set; }
     public int PrevLogIndex { get; set; }
     public int PrevLogTerm { get; set; }
-    public List<Log> Entries { get; set; } = new();
+    public List<Log> Entries { get; set; }
     public int leaderHighestLogCommitted { get; set; }
 }
 
@@ -44,6 +44,6 @@ public record VoteResponseRPC
 
 public record clientData
 {
-    public string key { get; set; }
-    public string message { get; set; }
+    public string Key { get; set; }
+    public string Message { get; set; }
 }

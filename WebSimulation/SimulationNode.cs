@@ -74,6 +74,6 @@ public class SimulationNode : INode
 
     public async Task receiveCommandFromClient(string key, string value)
     {
-        await InnerNode.recieveCommandFromClient(new clientData { key = key, message = value });
+        await InnerNode.recieveCommandFromClient(new clientData { Key = key, Message = value });
     }
 }

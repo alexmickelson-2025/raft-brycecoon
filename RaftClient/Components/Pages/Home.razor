@@ -47,8 +47,8 @@
                     <div>
                         @foreach (var (log, index) in item.Value.logs.Select((log, index) => (log, index)))
                         {
-                            <p>Index: @index | Key: @log.key | Term Id: @log.term | Committed?:
-                                @(item.Value.StateMachine.ContainsKey(log.key) ? "Yes" : "No")
+                            <p>Index: @index | Key: @log.Key | Term Id: @log.term | Committed?:
+                                @(item.Value.StateMachine.ContainsKey(log.Key) ? "Yes" : "No")
                             </p>
                         }
                     </div>
@@ -136,8 +136,8 @@
 
         if (errorMessage == "")
         {
-            var sendingData = new clientData{key=keyInput, message=valueInput};
-            errorMessage = "key,value: " + sendingData.key + " " + sendingData.message;
+            var sendingData = new clientData{Key=keyInput, Message=valueInput};
+            errorMessage = "key,value: " + sendingData.Key + " " + sendingData.Message;
             Console.WriteLine(sendingData.ToString());
 
             await httpClient.PostAsJsonAsync(leaderNodeUrl + "/request/command", sendingData);

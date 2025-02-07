@@ -22,7 +22,6 @@ c:\Users\bryce\source\repos\DistributedTDDProject1\DistributedTDDTests\bin\Debug
 c:\Users\bryce\source\repos\DistributedTDDProject1\DistributedTDDTests\bin\Debug\net8.0\Newtonsoft.Json.dll
 c:\Users\bryce\source\repos\DistributedTDDProject1\DistributedTDDTests\bin\Debug\net8.0\NSubstitute.dll
 c:\Users\bryce\source\repos\DistributedTDDProject1\DistributedTDDTests\bin\Debug\net8.0\NuGet.Frameworks.dll
-c:\Users\bryce\source\repos\DistributedTDDProject1\DistributedTDDTests\bin\Debug\net8.0\Serilog.dll
 c:\Users\bryce\source\repos\DistributedTDDProject1\DistributedTDDTests\bin\Debug\net8.0\System.Diagnostics.EventLog.dll
 c:\Users\bryce\source\repos\DistributedTDDProject1\DistributedTDDTests\bin\Debug\net8.0\xunit.abstractions.dll
 c:\Users\bryce\source\repos\DistributedTDDProject1\DistributedTDDTests\bin\Debug\net8.0\xunit.assert.dll
