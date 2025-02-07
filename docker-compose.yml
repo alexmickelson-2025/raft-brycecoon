@@ -5,8 +5,6 @@ services:
       dockerfile: Dockerfile
     working_dir: /app
     user: 1000:100
-    volumes:
-      - ./:/app
     environment:
       - NODE_ID=e3f5a9c6-8e3a-4d2a-9c5f-748b81b7aef1
       - OTHER_NODES=7a1d57e1-3b47-4e6b-b4f9-1a2c93fbe417,http://node2:8080;d8249b7d-5fc8-4e60-9f71-7dd327a4cd8c,http://node3:8080
@@ -19,8 +17,6 @@ services:
       dockerfile: Dockerfile
     working_dir: /app
     user: 1000:100
-    volumes:
-      - ./:/app
     environment:
       - NODE_ID=7a1d57e1-3b47-4e6b-b4f9-1a2c93fbe417 
       - OTHER_NODES=e3f5a9c6-8e3a-4d2a-9c5f-748b81b7aef1,http://node1:8080;d8249b7d-5fc8-4e60-9f71-7dd327a4cd8c,http://node3:8080
@@ -34,8 +30,6 @@ services:
       dockerfile: Dockerfile
     working_dir: /app
     user: 1000:100
-    volumes:
-      - ./:/app
     environment:
       - NODE_ID=d8249b7d-5fc8-4e60-9f71-7dd327a4cd8c 
       - OTHER_NODES=e3f5a9c6-8e3a-4d2a-9c5f-748b81b7aef1,http://node1:8080;7a1d57e1-3b47-4e6b-b4f9-1a2c93fbe417,http://node2:8080
@@ -50,8 +44,6 @@ services:
     user: 1000:100
     ports:
     - 6723:8080
-    volumes:
-      - ./:/app
     environment:
       - NODE_URLS=http://node1:8080;http://node2:8080;http://node3:8080
     command: dotnet run --project RaftClient 
