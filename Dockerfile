@@ -11,7 +11,7 @@ RUN groupadd -g 1000 developer && \
     chown -R developer:developer /home/developer
 
      
-WORKDIR /app
+WORKDIR .
  
 COPY . .
  
