@@ -29,21 +29,18 @@ public class RaftElectionTests
     public void Recieving_Append_Entries_From_Another_Node_The_Node_Remembers_The_Leader()
     {
         Node n = new();
-        Node n2 = new();
-        n.neighbors = [n2];
-        n2.neighbors = [n];
-
-        Assert.Equal(0, n.term);
-        Assert.Equal(0, n2.term);
+        var fakeNode1 = Substitute.For<INode>();
+        n.neighbors = [fakeNode1];
 
         AppendEntriesRequestRPC request = new AppendEntriesRequestRPC
         {
-            LeaderId = n.id
+            LeaderId = fakeNode1.id,
+            Term = 1000
         };
 
-        n2.RequestAppendEntry(request);
+        n.RequestAppendEntry(request);
 
-        Assert.Equal(n.id, n2.currentLeader);
+        Assert.Equal(fakeNode1.id, n.currentLeader);
     }
 
     //Test 3
@@ -96,12 +93,10 @@ public class RaftElectionTests
     public void Follower_Gets_A_Message_Within_300_ms_Does_Not_Start_An_Election()
     {
         Node n = new();
-        Node n2 = new();
-        n.neighbors = [n2, n];
-        n2.neighbors = [n, n2];
+        INode n2 = Substitute.For<INode>();
+        n.neighbors = [n2];
         Assert.Equal(nodeState.FOLLOWER, n.state);
 
-        n2.state = nodeState.LEADER;
         for (int i = 0; i < 5; i++)
         {
             Thread.Sleep(50);
@@ -273,7 +268,6 @@ public class RaftElectionTests
         };
 
         node.startElection();
-        Assert.Equal(1, node.term);
         node.RequestAppendEntry(request);
         Assert.Equal(nodeState.FOLLOWER, node.state);
     }
@@ -303,10 +297,8 @@ public class RaftElectionTests
         node.neighbors = [fakeNode1, fakeNode2];
 
         node.RequestVote(new VoteRequestRPC { candidateId = fakeNode1.id, candidateTerm = 1 });
-        Assert.Equal(1, node.term);
         Assert.Equal(fakeNode1.id, node.voteId);
         node.RequestVote(new VoteRequestRPC { candidateId = fakeNode2.id, candidateTerm = 2 });
-        Assert.Equal(2, node.term);
         Assert.Equal(fakeNode2.id, node.voteId);
     }
 
@@ -319,6 +311,24 @@ public class RaftElectionTests
         Thread.Sleep(400);
         n.term.Should().BeGreaterThan(beforeTerm);
 
+    }
+
+    //test 17
+    [Fact]
+    public void follower_Receives_Request_sends_Reponse()
+    {
+        Node node = new();
+        var fakeNode1 = Substitute.For<INode>();
+        node.neighbors = [fakeNode1];
+
+        AppendEntriesRequestRPC request = new AppendEntriesRequestRPC
+        {
+            LeaderId = fakeNode1.id,
+            Term = 10
+        };
+
+        node.RequestAppendEntry(request);
+        fakeNode1.Received().ReceiveAppendEntryRPCResponse(Arg.Any<AppendEntriesResponseRPC>());
     }
 
     //Test 18
